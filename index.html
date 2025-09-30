@@ -2561,122 +2561,122 @@
         }
 
         // 행 추가 함수
-        function addTableRow(tableType) {
-            const tbody = document.getElementById(`${tableType}-tbody`);
-            const templates = {
-                managers: `
-                    <tr class="data-row">
-                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
-                        <td><input type="text" class="data-input" placeholder="닉네임 입력"></td>
-                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
-                        <td><button class="delete-row-btn">🗑️</button></td>
-                    </tr>
-                `,
-                tc: `
-                    <tr class="data-row">
-                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
-                        <td><input type="text" class="data-input" placeholder="닉네임 입력"></td>
-                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
-                        <td><button class="delete-row-btn">🗑️</button></td>
-                    </tr>
-                `,
-                ps: `
-                    <tr class="data-row">
-                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
-                        <td>
-                            <select class="data-select">
-                                <option value="">선택</option>
-                                <option value="A">A조</option>
-                                <option value="B">B조</option>
-                                <option value="C">C조</option>
-                                <option value="D">D조</option>
-                                <option value="E">E조</option>
-                                <option value="F">F조</option>
-                                <option value="G">G조</option>
-                            </select>
-                        </td>
-                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
-                        <td><button class="delete-row-btn">🗑️</button></td>
-                    </tr>
-                `,
-                permanent: `
-                    <tr class="data-row">
-                        <td><input type="text" class="data-input" placeholder="원바코드"></td>
-                        <td>
-                            <select class="data-select">
-                                <option value="">선택</option>
-                                <option value="A">A조</option>
-                                <option value="B">B조</option>
-                                <option value="C">C조</option>
-                                <option value="D">D조</option>
-                                <option value="E">E조</option>
-                                <option value="F">F조</option>
-                                <option value="G">G조</option>
-                            </select>
-                        </td>
-                        <td><input type="text" class="data-input" placeholder="이름"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><button class="delete-row-btn">🗑️</button></td>
-                    </tr>
-                `,
-                temporary: `
-                    <tr class="data-row">
-                        <td><input type="text" class="data-input" placeholder="원바코드"></td>
-                        <td><input type="text" class="data-input" placeholder="이름"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><input type="checkbox" class="skill-checkbox"></td>
-                        <td><button class="delete-row-btn">🗑️</button></td>
-                    </tr>
-                `,
-                newbie: `
-                    <tr class="data-row">
-                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
-                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
-                        <td><button class="delete-row-btn">🗑️</button></td>
-                    </tr>
-                `,
-                cd: `
-                    <tr class="data-row">
-                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
-                        <td>
-                            <select class="data-select">
-                                <option value="">선택</option>
-                                <option value="OB">OB</option>
-                                <option value="IB">IB</option>
-                                <option value="ICQA">ICQA</option>
-                                <option value="HUB">HUB</option>
-                                <option value="CFC">CFC</option>
-                            </select>
-                        </td>
-                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
-                        <td><button class="delete-row-btn">🗑️</button></td>
-                    </tr>
-                `
-            };
+function addTableRow(tableType) {
+    const tbody = document.getElementById(`${tableType}-tbody`);
+    const templates = {
+        managers: `
+            <tr class="data-row">
+                <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                <td><input type="text" class="data-input" placeholder="닉네임 입력"></td>
+                <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                <td><button class="delete-row-btn">🗑️</button></td>
+            </tr>
+        `,
+        tc: `
+            <tr class="data-row">
+                <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                <td><input type="text" class="data-input" placeholder="닉네임 입력"></td>
+                <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                <td><button class="delete-row-btn">🗑️</button></td>
+            </tr>
+        `,
+        ps: `
+            <tr class="data-row">
+                <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                <td>
+                    <select class="data-select">
+                        <option value="">선택</option>
+                        <option value="A">A조</option>
+                        <option value="B">B조</option>
+                        <option value="C">C조</option>
+                        <option value="D">D조</option>
+                        <option value="E">E조</option>
+                        <option value="F">F조</option>
+                        <option value="G">G조</option>
+                    </select>
+                </td>
+                <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                <td><button class="delete-row-btn">🗑️</button></td>
+            </tr>
+        `,
+        permanent: `
+            <tr class="data-row">
+                <td><input type="text" class="data-input" placeholder="원바코드"></td>
+                <td>
+                    <select class="data-select">
+                        <option value="">선택</option>
+                        <option value="A">A조</option>
+                        <option value="B">B조</option>
+                        <option value="C">C조</option>
+                        <option value="D">D조</option>
+                        <option value="E">E조</option>
+                        <option value="F">F조</option>
+                        <option value="G">G조</option>
+                    </select>
+                </td>
+                <td><input type="text" class="data-input" placeholder="이름"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><button class="delete-row-btn">🗑️</button></td>
+            </tr>
+        `,
+        temporary: `
+            <tr class="data-row">
+                <td><input type="text" class="data-input" placeholder="원바코드"></td>
+                <td><input type="text" class="data-input" placeholder="이름"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><input type="checkbox" class="skill-checkbox"></td>
+                <td><button class="delete-row-btn">🗑️</button></td>
+            </tr>
+        `,
+        newbie: `
+            <tr class="data-row">
+                <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                <td><button class="delete-row-btn">🗑️</button></td>
+            </tr>
+        `,
+        cd: `
+            <tr class="data-row">
+                <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                <td>
+                    <select class="data-select">
+                        <option value="">선택</option>
+                        <option value="OB">OB</option>
+                        <option value="IB">IB</option>
+                        <option value="ICQA">ICQA</option>
+                        <option value="HUB">HUB</option>
+                        <option value="CFC">CFC</option>
+                    </select>
+                </td>
+                <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                <td><button class="delete-row-btn">🗑️</button></td>
+            </tr>
+        `
+    };
 
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = templates[tableType];
-            tbody.appendChild(newRow.firstElementChild);
+    // tbody에 직접 HTML을 삽입하는 안정적인 방식으로 변경
+    tbody.insertAdjacentHTML('beforeend', templates[tableType]);
+    const newRow = tbody.lastElementChild; // 방금 추가된 마지막 행을 가져옴
 
-            // 새로 추가된 input에 이벤트 리스너 추가
-            newRow.querySelectorAll('.data-input, .data-select, .skill-checkbox').forEach(input => {
-                input.addEventListener('change', saveDataTabToFirestore);
-                input.addEventListener('input', saveDataTabToFirestore);
-            });
+    // 새로 추가된 행의 input들에 이벤트 리스너 추가
+    newRow.querySelectorAll('.data-input, .data-select, .skill-checkbox').forEach(input => {
+        input.addEventListener('change', saveDataTabToFirestore);
+        input.addEventListener('input', saveDataTabToFirestore);
+    });
 
-            saveDataTabToFirestore();
-        }
+    saveDataTabToFirestore();
+}
 
         // DATA 탭 저장
         function saveDataTabToFirestore() {
