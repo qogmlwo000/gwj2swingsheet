@@ -832,6 +832,23 @@
             50% { opacity: 0.7; transform: scale(0.95); }
         }
 		
+		/* 입력 중 표시 */
+        .typing-indicator {
+            display: none;
+            align-items: center;
+            padding: 8px 14px;
+            background: var(--surface-primary);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            font-size: 13px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            gap: 6px;
+        }
+		
 		/* 인원 현황 테이블 input 스타일 */
         .staffing-input {
             width: 70px;
@@ -946,12 +963,273 @@
                 font-size: 12px;
             }
         }
+		
+		/* 변경 로그 패널 */
+        .activity-log-btn {
+            background: var(--surface-secondary);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.2s ease;
+            font-size: 18px;
+            margin-right: 12px;
+        }
+
+        .activity-log-btn:hover {
+            transform: translateY(-1px);
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        .activity-log-panel {
+            position: fixed;
+            left: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: var(--surface-primary);
+            backdrop-filter: blur(12px);
+            border-right: 1px solid var(--border);
+            box-shadow: var(--shadow-lg);
+            z-index: 1001;
+            transition: left 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .activity-log-panel.open {
+            left: 0;
+        }
+
+        .activity-log-header {
+            position: sticky;
+            top: 0;
+            background: var(--surface-primary);
+            backdrop-filter: blur(12px);
+            padding: 20px 24px;
+            border-bottom: 2px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .activity-log-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .close-log-btn {
+            background: transparent;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: color 0.2s ease;
+        }
+
+        .close-log-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .activity-log-content {
+            padding: 16px 24px;
+        }
+
+        .log-item {
+            padding: 12px;
+            margin-bottom: 8px;
+            background: var(--surface-secondary);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .log-user {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .log-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .log-change {
+            margin-top: 6px;
+            font-size: 13px;
+            color: var(--text-primary);
+        }
+
+        .log-value {
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .log-empty {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px 20px;
+            font-size: 14px;
+        }
+		
+		/* DATA 탭 스타일 */
+        .data-management {
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .data-section {
+            margin-bottom: 40px;
+            background: var(--surface-primary);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .section-header h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .add-row-btn {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .add-row-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 8px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table thead {
+            background: var(--surface-secondary);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .data-table th {
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: 600;
+            color: var(--text-primary);
+            border-bottom: 2px solid var(--border);
+            white-space: nowrap;
+        }
+
+        .data-table td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .data-row:hover {
+            background: var(--surface-secondary);
+        }
+
+        .data-input {
+            width: 100%;
+            padding: 6px 8px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .data-input:focus {
+            outline: none;
+            background: var(--surface-secondary);
+            border-color: var(--accent);
+        }
+
+        .data-input:hover {
+            background: var(--surface-secondary);
+        }
+
+        .data-select {
+            width: 100%;
+            padding: 6px 8px;
+            background: var(--surface-secondary);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .data-select:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        .skill-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: var(--accent);
+        }
+
+        .delete-row-btn {
+            background: transparent;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: all 0.2s ease;
+        }
+
+        .delete-row-btn:hover {
+            opacity: 1;
+            transform: scale(1.2);
+        }
     </style>
 </head>
 <body>
     <header class="fixed-header">
         <div class="header-top">
             <div class="header-title">
+                <button class="activity-log-btn" id="activityLogBtn" title="변경 내역">📋</button>
                 <span class="rocket">🚀</span>
                 <span class="title-text">GWJ2 OB 인원 관리 시트 #PDA 일지</span>
             </div>
@@ -995,6 +1273,11 @@
                     <div class="status-dot" id="statusDot"></div>
                     <span id="statusText">연결 중...</span>
                 </div>
+                <div class="typing-indicator" id="typingIndicator">
+                    <span style="color: var(--accent);">✍️</span>
+                    <span id="typingUser"></span>
+                    <span style="color: var(--text-secondary);">입력 중...</span>
+                </div>
             </div>
         </div>
         
@@ -1022,9 +1305,15 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, doc, setDoc, onSnapshot, collection, query } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+		
+		// 입력중 전역변수
+        let typingTimeout = null;
+        let isTyping = false;
+        let saveTimeout = null;
+        let lastSavedData = {};
 
-        // Your web app's Firebase configuration
+        // Firebase API KEY
         const firebaseConfig = {
             apiKey: "AIzaSyDhYh-C1Zsv7PjRq0kHBNDUf8JMcxTV_l4",
             authDomain: "gwj2swingsheet.firebaseapp.com",
@@ -1216,6 +1505,270 @@
                 }, 0);
                 return;
             }
+			
+			if (tabId === 'data') {
+                contentArea.innerHTML = `
+                    <div class="data-management">
+                        <h2 style="font-size: 28px; font-weight: 700; margin-bottom: 24px; color: var(--text-primary);">📊 사원 데이터 관리</h2>
+                        
+                        <!-- 매니저 테이블 -->
+                        <div class="data-section">
+                            <div class="section-header">
+                                <h3>👔 매니저 (M/G)</h3>
+                                <button class="add-row-btn" data-table="managers">+ 행 추가</button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="data-table" id="managers-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 120px;">원바코드</th>
+                                            <th style="width: 120px;">닉네임</th>
+                                            <th style="width: 150px;">이름</th>
+                                            <th style="width: 60px;">삭제</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="managers-tbody">
+                                        <tr class="data-row">
+                                            <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                                            <td><input type="text" class="data-input" placeholder="닉네임 입력"></td>
+                                            <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                                            <td><button class="delete-row-btn">🗑️</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 현장관리자 테이블 -->
+                        <div class="data-section">
+                            <div class="section-header">
+                                <h3>👷 현장관리자 (T/C)</h3>
+                                <button class="add-row-btn" data-table="tc">+ 행 추가</button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="data-table" id="tc-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 120px;">원바코드</th>
+                                            <th style="width: 120px;">닉네임</th>
+                                            <th style="width: 150px;">이름</th>
+                                            <th style="width: 60px;">삭제</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tc-tbody">
+                                        <tr class="data-row">
+                                            <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                                            <td><input type="text" class="data-input" placeholder="닉네임 입력"></td>
+                                            <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                                            <td><button class="delete-row-btn">🗑️</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- PS 사원 테이블 -->
+                        <div class="data-section">
+                            <div class="section-header">
+                                <h3>⭐ PS 사원</h3>
+                                <button class="add-row-btn" data-table="ps">+ 행 추가</button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="data-table" id="ps-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 120px;">원바코드</th>
+                                            <th style="width: 80px;">조</th>
+                                            <th style="width: 150px;">이름</th>
+                                            <th style="width: 60px;">삭제</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="ps-tbody">
+                                        <tr class="data-row">
+                                            <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                                            <td>
+                                                <select class="data-select">
+                                                    <option value="">선택</option>
+                                                    <option value="A">A조</option>
+                                                    <option value="B">B조</option>
+                                                    <option value="C">C조</option>
+                                                    <option value="D">D조</option>
+                                                    <option value="E">E조</option>
+                                                    <option value="F">F조</option>
+                                                    <option value="G">G조</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                                            <td><button class="delete-row-btn">🗑️</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 계약직 사원 테이블 -->
+                        <div class="data-section">
+                            <div class="section-header">
+                                <h3>💼 계약직 사원</h3>
+                                <button class="add-row-btn" data-table="permanent">+ 행 추가</button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="data-table" id="permanent-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 100px;">원바코드</th>
+                                            <th style="width: 70px;">조</th>
+                                            <th style="width: 100px;">이름</th>
+                                            <th style="width: 70px;">오토백</th>
+                                            <th style="width: 70px;">메뉴얼</th>
+                                            <th style="width: 70px;">멀티</th>
+                                            <th style="width: 80px;">하이스킬</th>
+                                            <th style="width: 70px;">AGV</th>
+                                            <th style="width: 90px;">오더피커</th>
+                                            <th style="width: 70px;">워터</th>
+                                            <th style="width: 60px;">삭제</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="permanent-tbody">
+                                        <tr class="data-row">
+                                            <td><input type="text" class="data-input" placeholder="원바코드"></td>
+                                            <td>
+                                                <select class="data-select">
+                                                    <option value="">선택</option>
+                                                    <option value="A">A조</option>
+                                                    <option value="B">B조</option>
+                                                    <option value="C">C조</option>
+                                                    <option value="D">D조</option>
+                                                    <option value="E">E조</option>
+                                                    <option value="F">F조</option>
+                                                    <option value="G">G조</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" class="data-input" placeholder="이름"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><button class="delete-row-btn">🗑️</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 단기직 사원 테이블 -->
+                        <div class="data-section">
+                            <div class="section-header">
+                                <h3>📋 단기직 사원</h3>
+                                <button class="add-row-btn" data-table="temporary">+ 행 추가</button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="data-table" id="temporary-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 120px;">원바코드</th>
+                                            <th style="width: 120px;">이름</th>
+                                            <th style="width: 70px;">오토백</th>
+                                            <th style="width: 70px;">메뉴얼</th>
+                                            <th style="width: 70px;">멀티</th>
+                                            <th style="width: 80px;">하이스킬</th>
+                                            <th style="width: 70px;">AGV</th>
+                                            <th style="width: 90px;">오더피커</th>
+                                            <th style="width: 70px;">워터</th>
+                                            <th style="width: 60px;">삭제</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="temporary-tbody">
+                                        <tr class="data-row">
+                                            <td><input type="text" class="data-input" placeholder="원바코드"></td>
+                                            <td><input type="text" class="data-input" placeholder="이름"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><input type="checkbox" class="skill-checkbox"></td>
+                                            <td><button class="delete-row-btn">🗑️</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 신규단기 사원 테이블 -->
+                        <div class="data-section">
+                            <div class="section-header">
+                                <h3>🆕 신규단기 사원</h3>
+                                <button class="add-row-btn" data-table="newbie">+ 행 추가</button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="data-table" id="newbie-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 150px;">원바코드</th>
+                                            <th style="width: 200px;">이름</th>
+                                            <th style="width: 60px;">삭제</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="newbie-tbody">
+                                        <tr class="data-row">
+                                            <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                                            <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                                            <td><button class="delete-row-btn">🗑️</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- CD 사원 테이블 -->
+                        <div class="data-section">
+                            <div class="section-header">
+                                <h3>🔧 CD 사원</h3>
+                                <button class="add-row-btn" data-table="cd">+ 행 추가</button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="data-table" id="cd-table">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 120px;">원바코드</th>
+                                            <th style="width: 100px;">공정</th>
+                                            <th style="width: 150px;">이름</th>
+                                            <th style="width: 60px;">삭제</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cd-tbody">
+                                        <tr class="data-row">
+                                            <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                                            <td>
+                                                <select class="data-select">
+                                                    <option value="">선택</option>
+                                                    <option value="OB">OB</option>
+                                                    <option value="IB">IB</option>
+                                                    <option value="ICQA">ICQA</option>
+                                                    <option value="HUB">HUB</option>
+                                                    <option value="CFC">CFC</option>
+                                                </select>
+                                            </td>
+                                            <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                                            <td><button class="delete-row-btn">🗑️</button></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                setTimeout(() => {
+                    initializeDataTab();
+                }, 0);
+                return;
+            }
             
             const content = tabContents[tabId];
             contentArea.innerHTML = `
@@ -1314,7 +1867,10 @@
         
         function initializeHomeTabListeners() {
             document.querySelectorAll('.staffing-input, .report-input').forEach(input => {
-                input.addEventListener('input', saveDataToFirestore);
+                input.addEventListener('input', () => {
+                    saveDataToFirestore();
+                    notifyTyping();
+                });
             });
             document.getElementById('reset-btn')?.addEventListener('click', () => {
                 if (confirm('정말로 모든 값을 0으로 초기화하시겠습니까?')) {
@@ -1343,6 +1899,10 @@
             setupLoginListeners();
             
             switchTab('home');
+			
+			// 로그 패널 이벤트
+            document.getElementById('activityLogBtn')?.addEventListener('click', toggleActivityLog);
+            document.getElementById('closeLogBtn')?.addEventListener('click', toggleActivityLog);
         });
 
         const toggleButton = document.querySelector('.dark-light-toggle');
@@ -1366,6 +1926,40 @@
         }, (error) => {
             console.error('Connection error:', error);
             updateConnectionStatus(false);
+        });
+		
+		// 타이핑 상태 리스너 - 컬렉션 전체 감시
+        const typingCollectionRef = collection(db, "typing");
+        onSnapshot(typingCollectionRef, (snapshot) => {
+            const typingIndicator = document.getElementById('typingIndicator');
+            const typingUser = document.getElementById('typingUser');
+            
+            if (!typingIndicator || !typingUser) return;
+            
+            const now = new Date().getTime();
+            const typingUsers = [];
+            
+            snapshot.forEach((doc) => {
+                const data = doc.data();
+                // 5초 이내 & 본인 아닌 경우만
+                if (data.displayName && 
+                    data.timestamp && 
+                    (now - data.timestamp < 5000) &&
+                    data.displayName !== currentUser?.displayName) {
+                    typingUsers.push(data.displayName);
+                }
+            });
+            
+            if (typingUsers.length > 0) {
+                if (typingUsers.length === 1) {
+                    typingUser.textContent = typingUsers[0] + ' 님이';
+                } else {
+                    typingUser.textContent = typingUsers.join(', ') + ' 님이';
+                }
+                typingIndicator.style.display = 'flex';
+            } else {
+                typingIndicator.style.display = 'none';
+            }
         });
         
         function getInitialData() {
@@ -1391,11 +1985,9 @@
             });
 
             const managerInputs = document.querySelectorAll('#manager-report-table .report-input');
-            // 빈 값은 빈 문자열로 저장
             const managerData = Array.from(managerInputs).map(input => input.value.trim() || '');
             
             const remarkInputs = document.querySelectorAll('.report-remark');
-            // 빈 값은 빈 문자열로 저장
             const remarkData = Array.from(remarkInputs).map(input => input.value.trim() || '');
 
             const dataToSave = {
@@ -1406,7 +1998,235 @@
                 }
             };
             
-            setDoc(docRef, dataToSave, { merge: true });
+            // 5초 디바운스 - 마지막 수정만 기록
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                // 변경사항 로그 기록 (자동 감지)
+                if (Object.keys(lastSavedData).length > 0) {
+                    logChangesAuto(lastSavedData, dataToSave);
+                }
+                lastSavedData = JSON.parse(JSON.stringify(dataToSave));
+                
+                setDoc(docRef, dataToSave, { merge: true });
+            }, 5000);
+        }
+		
+		// 자동 변경사항 감지 (모든 필드 자동 추적)
+        function logChangesAuto(oldData, newData) {
+            if (!currentUser) return;
+            
+            const changes = [];
+            
+            // 재귀적으로 모든 변경사항 찾기
+            function findChanges(oldObj, newObj, path = '') {
+                if (typeof newObj !== 'object' || newObj === null) {
+                    if (oldObj !== newObj) {
+                        changes.push({
+                            field: path,
+                            oldValue: oldObj === undefined || oldObj === null ? '-' : String(oldObj),
+                            newValue: newObj === undefined || newObj === null ? '-' : String(newObj)
+                        });
+                    }
+                    return;
+                }
+                
+                // 배열 처리
+                if (Array.isArray(newObj)) {
+                    newObj.forEach((item, index) => {
+                        const oldItem = oldObj?.[index];
+                        const fieldPath = path ? `${path}[${index}]` : `[${index}]`;
+                        
+                        // 빈 값끼리는 무시
+                        if ((oldItem || item) && oldItem !== item) {
+                            findChanges(oldItem, item, fieldPath);
+                        }
+                    });
+                    return;
+                }
+                
+                // 객체 처리
+                for (const key in newObj) {
+                    const oldValue = oldObj?.[key];
+                    const newValue = newObj[key];
+                    const fieldPath = path ? `${path}.${key}` : key;
+                    
+                    findChanges(oldValue, newValue, fieldPath);
+                }
+            }
+            
+            findChanges(oldData, newData);
+            
+            // 변경사항이 있으면 Firestore에 저장
+            if (changes.length > 0) {
+                const logRef = doc(collection(db, "activityLogs"));
+                setDoc(logRef, {
+                    user: currentUser.displayName,
+                    timestamp: new Date().getTime(),
+                    changes: changes
+                });
+            }
+        }
+        
+        // 로그 패널 토글
+        function toggleActivityLog() {
+            const panel = document.getElementById('activityLogPanel');
+            panel.classList.toggle('open');
+            
+            if (panel.classList.contains('open')) {
+                loadActivityLogs();
+            }
+        }
+        
+        // 로그 불러오기
+        function loadActivityLogs() {
+            const logsCollectionRef = collection(db, "activityLogs");
+            
+            onSnapshot(logsCollectionRef, (snapshot) => {
+                const logs = [];
+                const sevenDaysAgo = new Date().getTime() - (7 * 24 * 60 * 60 * 1000);
+                
+                snapshot.forEach((docSnapshot) => {
+                    const data = docSnapshot.data();
+                    
+                    // 7일 이상 된 로그는 삭제
+                    if (data.timestamp < sevenDaysAgo) {
+                        docSnapshot.ref.delete();
+                    } else {
+                        logs.push({ id: docSnapshot.id, ...data });
+                    }
+                });
+                
+                // 최신순 정렬
+                logs.sort((a, b) => b.timestamp - a.timestamp);
+                
+                // 최근 20개만 표시
+                displayActivityLogs(logs.slice(0, 20));
+            }, (error) => {
+                console.error('로그 로딩 에러:', error);
+            });
+        }
+        
+        // 로그 표시
+        function displayActivityLogs(logs) {
+            const content = document.getElementById('activityLogContent');
+            
+            if (logs.length === 0) {
+                content.innerHTML = '<div class="log-empty">아직 변경 내역이 없습니다.</div>';
+                return;
+            }
+            
+            // 필드명 한글화 (자동 변환)
+            function prettifyFieldName(field) {
+                // 1단계: 알려진 필드명 매핑
+                const fieldMap = {
+                    'staffing.perm-tc-plan': 'T/C Plan',
+                    'staffing.perm-tc-actual': 'T/C Actual',
+                    'staffing.perm-perm-plan': 'Perm Plan',
+                    'staffing.perm-perm-actual': 'Perm Actual',
+                    'staffing.temp-temp-plan': 'Temp Plan',
+                    'staffing.temp-temp-actual': 'Temp Actual',
+                    'staffing.temp-newbie-plan': 'Newbie Plan',
+                    'staffing.temp-newbie-actual': 'Newbie Actual'
+                };
+                
+                if (fieldMap[field]) {
+                    return fieldMap[field];
+                }
+                
+                // 2단계: 패턴 기반 자동 변환
+                
+                // report.managers[숫자] → Manager 숫자+1
+                const managerMatch = field.match(/report\.managers\[(\d+)\]/);
+                if (managerMatch) {
+                    return `Manager ${parseInt(managerMatch[1]) + 1}`;
+                }
+                
+                // report.remarks[숫자] → 비고 숫자+1
+                const remarkMatch = field.match(/report\.remarks\[(\d+)\]/);
+                if (remarkMatch) {
+                    const index = parseInt(remarkMatch[1]);
+                    const remarkNames = ['T/C 비고', '계약직 비고', '단기직 비고'];
+                    return remarkNames[index] || `비고 ${index + 1}`;
+                }
+                
+                // 3단계: 일반 패턴 자동 변환
+                const arrayMatch = field.match(/(\w+)\.(\w+)\[(\d+)\]/);
+                if (arrayMatch) {
+                    const [_, section, property, index] = arrayMatch;
+                    const sectionName = section.toUpperCase();
+                    const propertyName = property.charAt(0).toUpperCase() + property.slice(1);
+                    return `${sectionName} ${propertyName} ${parseInt(index) + 1}`;
+                }
+                
+                // 4단계: 점 표기법 자동 변환
+                const dotMatch = field.match(/(\w+)\.(\w+)/);
+                if (dotMatch) {
+                    const [_, section, property] = dotMatch;
+                    const sectionName = section.charAt(0).toUpperCase() + section.slice(1);
+                    const propertyName = property.split(/[-_]/).map(word => 
+                        word.charAt(0).toUpperCase() + word.slice(1)
+                    ).join(' ');
+                    return `${sectionName} ${propertyName}`;
+                }
+                
+                // 5단계: 그 외는 kebab-case를 Title Case로 변환
+                return field.split(/[-_.]/).map(word => 
+                    word.charAt(0).toUpperCase() + word.slice(1)
+                ).join(' ');
+            }
+            
+            content.innerHTML = logs.map(log => {
+                const timeAgo = getTimeAgo(log.timestamp);
+                const changesHtml = log.changes.map(change => {
+                    const prettyField = prettifyFieldName(change.field);
+                    return `<div class="log-change">
+                        ${prettyField}: <span class="log-value">${change.oldValue}</span> → <span class="log-value">${change.newValue}</span>
+                    </div>`;
+                }).join('');
+                
+                return `
+                    <div class="log-item">
+                        <div><span class="log-user">${log.user}</span>님이 수정</div>
+                        ${changesHtml}
+                        <div class="log-time">${timeAgo}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // 시간 계산 (몇 분 전)
+        function getTimeAgo(timestamp) {
+            const now = new Date().getTime();
+            const diff = now - timestamp;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+            
+            if (days > 0) return `${days}일 전`;
+            if (hours > 0) return `${hours}시간 전`;
+            if (minutes > 0) return `${minutes}분 전`;
+            return '방금 전';
+        }
+		
+		// 입력중 타이핑
+        function notifyTyping() {
+            if (!currentUser) return;
+            
+            // 각 사용자별 문서로 저장
+            const typingRef = doc(db, "typing", currentUser.username);
+            setDoc(typingRef, {
+                displayName: currentUser.displayName,
+                timestamp: new Date().getTime()
+            });
+            
+            // 3초 후 타이핑 상태 제거
+            clearTimeout(typingTimeout);
+            typingTimeout = setTimeout(() => {
+                setDoc(typingRef, {
+                    displayName: null,
+                    timestamp: null
+                });
+            }, 3000);
         }
 
         function updateUIFromData(data) {
@@ -1439,6 +2259,11 @@
             }
 
             calculateAll();
+            
+            // 초기 데이터 저장
+            if (Object.keys(lastSavedData).length === 0) {
+                lastSavedData = JSON.parse(JSON.stringify(data));
+            }
         }
 		
 		function showAdminPanel() {
@@ -1701,6 +2526,280 @@
 
             updateReportTotal();
         }
+		
+		// DATA 탭 초기화
+        function initializeDataTab() {
+            // 행 추가 버튼 이벤트
+            document.querySelectorAll('.add-row-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const tableType = e.target.dataset.table;
+                    addTableRow(tableType);
+                });
+            });
+
+            // 행 삭제 버튼 이벤트
+            document.addEventListener('click', (e) => {
+                if (e.target.classList.contains('delete-row-btn')) {
+                    const row = e.target.closest('tr');
+                    if (row.parentElement.querySelectorAll('tr').length > 1) {
+                        row.remove();
+                        saveDataTabToFirestore();
+                    } else {
+                        alert('최소 1개의 행은 유지해야 합니다.');
+                    }
+                }
+            });
+
+            // 입력 변경 시 자동 저장
+            document.querySelectorAll('.data-input, .data-select, .skill-checkbox').forEach(input => {
+                input.addEventListener('change', saveDataTabToFirestore);
+                input.addEventListener('input', saveDataTabToFirestore);
+            });
+
+            // Firestore에서 데이터 불러오기
+            loadDataTabFromFirestore();
+        }
+
+        // 행 추가 함수
+        function addTableRow(tableType) {
+            const tbody = document.getElementById(`${tableType}-tbody`);
+            const templates = {
+                managers: `
+                    <tr class="data-row">
+                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                        <td><input type="text" class="data-input" placeholder="닉네임 입력"></td>
+                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                        <td><button class="delete-row-btn">🗑️</button></td>
+                    </tr>
+                `,
+                tc: `
+                    <tr class="data-row">
+                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                        <td><input type="text" class="data-input" placeholder="닉네임 입력"></td>
+                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                        <td><button class="delete-row-btn">🗑️</button></td>
+                    </tr>
+                `,
+                ps: `
+                    <tr class="data-row">
+                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                        <td>
+                            <select class="data-select">
+                                <option value="">선택</option>
+                                <option value="A">A조</option>
+                                <option value="B">B조</option>
+                                <option value="C">C조</option>
+                                <option value="D">D조</option>
+                                <option value="E">E조</option>
+                                <option value="F">F조</option>
+                                <option value="G">G조</option>
+                            </select>
+                        </td>
+                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                        <td><button class="delete-row-btn">🗑️</button></td>
+                    </tr>
+                `,
+                permanent: `
+                    <tr class="data-row">
+                        <td><input type="text" class="data-input" placeholder="원바코드"></td>
+                        <td>
+                            <select class="data-select">
+                                <option value="">선택</option>
+                                <option value="A">A조</option>
+                                <option value="B">B조</option>
+                                <option value="C">C조</option>
+                                <option value="D">D조</option>
+                                <option value="E">E조</option>
+                                <option value="F">F조</option>
+                                <option value="G">G조</option>
+                            </select>
+                        </td>
+                        <td><input type="text" class="data-input" placeholder="이름"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><button class="delete-row-btn">🗑️</button></td>
+                    </tr>
+                `,
+                temporary: `
+                    <tr class="data-row">
+                        <td><input type="text" class="data-input" placeholder="원바코드"></td>
+                        <td><input type="text" class="data-input" placeholder="이름"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><input type="checkbox" class="skill-checkbox"></td>
+                        <td><button class="delete-row-btn">🗑️</button></td>
+                    </tr>
+                `,
+                newbie: `
+                    <tr class="data-row">
+                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                        <td><button class="delete-row-btn">🗑️</button></td>
+                    </tr>
+                `,
+                cd: `
+                    <tr class="data-row">
+                        <td><input type="text" class="data-input" placeholder="원바코드 입력"></td>
+                        <td>
+                            <select class="data-select">
+                                <option value="">선택</option>
+                                <option value="OB">OB</option>
+                                <option value="IB">IB</option>
+                                <option value="ICQA">ICQA</option>
+                                <option value="HUB">HUB</option>
+                                <option value="CFC">CFC</option>
+                            </select>
+                        </td>
+                        <td><input type="text" class="data-input" placeholder="이름 입력"></td>
+                        <td><button class="delete-row-btn">🗑️</button></td>
+                    </tr>
+                `
+            };
+
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = templates[tableType];
+            tbody.appendChild(newRow.firstElementChild);
+
+            // 새로 추가된 input에 이벤트 리스너 추가
+            newRow.querySelectorAll('.data-input, .data-select, .skill-checkbox').forEach(input => {
+                input.addEventListener('change', saveDataTabToFirestore);
+                input.addEventListener('input', saveDataTabToFirestore);
+            });
+
+            saveDataTabToFirestore();
+        }
+
+        // DATA 탭 저장
+        function saveDataTabToFirestore() {
+            const tables = ['managers', 'tc', 'ps', 'permanent', 'temporary', 'newbie', 'cd'];
+            const dataToSave = {};
+
+            tables.forEach(tableType => {
+                const tbody = document.getElementById(`${tableType}-tbody`);
+                if (!tbody) return;
+
+                const rows = [];
+                tbody.querySelectorAll('tr').forEach(row => {
+                    const inputs = row.querySelectorAll('.data-input');
+                    const selects = row.querySelectorAll('.data-select');
+                    const checkboxes = row.querySelectorAll('.skill-checkbox');
+
+                    const rowData = {
+                        inputs: Array.from(inputs).map(input => input.value),
+                        selects: Array.from(selects).map(select => select.value),
+                        checkboxes: Array.from(checkboxes).map(checkbox => checkbox.checked)
+                    };
+
+                    rows.push(rowData);
+                });
+
+                dataToSave[tableType] = rows;
+            });
+
+            const dataDocRef = doc(db, "employeeData", "current");
+            setDoc(dataDocRef, dataToSave, { merge: true });
+        }
+
+        // DATA 탭 불러오기
+        function loadDataTabFromFirestore() {
+            const dataDocRef = doc(db, "employeeData", "current");
+            onSnapshot(dataDocRef, (doc) => {
+                if (doc.exists()) {
+                    const data = doc.data();
+                    restoreDataTab(data);
+                }
+            });
+        }
+									
+		// DATA 탭 복원
+        function restoreDataTab(data) {
+            const tables = ['managers', 'tc', 'ps', 'permanent', 'temporary', 'newbie', 'cd'];
+
+            tables.forEach(tableType => {
+                const tbody = document.getElementById(`${tableType}-tbody`);
+                if (!tbody || !data[tableType]) return;
+
+                tbody.innerHTML = '';
+
+                data[tableType].forEach(rowData => {
+                    const row = document.createElement('tr');
+                    row.className = 'data-row';
+
+                    let cellsHTML = '';
+                    let inputIndex = 0;
+                    let selectIndex = 0;
+                    let checkboxIndex = 0;
+
+                    // 각 테이블 타입별로 적절한 구조 생성
+                    const structures = {
+                        managers: ['input', 'input', 'input', 'delete'],
+                        tc: ['input', 'input', 'input', 'delete'],
+                        ps: ['input', 'select', 'input', 'delete'],
+                        permanent: ['input', 'select', 'input', 'checkbox', 'checkbox', 'checkbox', 'checkbox', 'checkbox', 'checkbox', 'checkbox', 'delete'],
+                        temporary: ['input', 'input', 'checkbox', 'checkbox', 'checkbox', 'checkbox', 'checkbox', 'checkbox', 'checkbox', 'delete'],
+                        newbie: ['input', 'input', 'delete'],
+                        cd: ['input', 'select', 'input', 'delete']
+                    };
+
+                    structures[tableType].forEach(type => {
+                        if (type === 'input') {
+                            const value = rowData.inputs[inputIndex++] || '';
+                            cellsHTML += `<td><input type="text" class="data-input" value="${value}"></td>`;
+                        } else if (type === 'select') {
+                            const value = rowData.selects[selectIndex++] || '';
+                            let options = '';
+                            
+                            if (tableType === 'ps' || tableType === 'permanent') {
+                                options = `
+                                    <option value="">선택</option>
+                                    <option value="A" ${value === 'A' ? 'selected' : ''}>A조</option>
+                                    <option value="B" ${value === 'B' ? 'selected' : ''}>B조</option>
+                                    <option value="C" ${value === 'C' ? 'selected' : ''}>C조</option>
+                                    <option value="D" ${value === 'D' ? 'selected' : ''}>D조</option>
+                                    <option value="E" ${value === 'E' ? 'selected' : ''}>E조</option>
+                                    <option value="F" ${value === 'F' ? 'selected' : ''}>F조</option>
+                                    <option value="G" ${value === 'G' ? 'selected' : ''}>G조</option>
+                                `;
+                            } else if (tableType === 'cd') {
+                                options = `
+                                    <option value="">선택</option>
+                                    <option value="OB" ${value === 'OB' ? 'selected' : ''}>OB</option>
+                                    <option value="IB" ${value === 'IB' ? 'selected' : ''}>IB</option>
+                                    <option value="ICQA" ${value === 'ICQA' ? 'selected' : ''}>ICQA</option>
+                                    <option value="HUB" ${value === 'HUB' ? 'selected' : ''}>HUB</option>
+                                    <option value="CFC" ${value === 'CFC' ? 'selected' : ''}>CFC</option>
+                                `;
+                            }
+                            
+                            cellsHTML += `<td><select class="data-select">${options}</select></td>`;
+                        } else if (type === 'checkbox') {
+                            const checked = rowData.checkboxes[checkboxIndex++] ? 'checked' : '';
+                            cellsHTML += `<td><input type="checkbox" class="skill-checkbox" ${checked}></td>`;
+                        } else if (type === 'delete') {
+                            cellsHTML += `<td><button class="delete-row-btn">🗑️</button></td>`;
+                        }
+                    });
+
+                    row.innerHTML = cellsHTML;
+                    tbody.appendChild(row);
+
+                    // 이벤트 리스너 추가
+                    row.querySelectorAll('.data-input, .data-select, .skill-checkbox').forEach(input => {
+                        input.addEventListener('change', saveDataTabToFirestore);
+                        input.addEventListener('input', saveDataTabToFirestore);
+                    });
+                });
+            });
+        }
     </script>
 	
 	<!-- 로그인 -->
@@ -1713,6 +2812,17 @@
             <div id="loginError" class="error-message" style="display: none;"></div>
             <button id="loginBtn" class="login-btn">로그인</button>
             <button id="registerBtn" class="login-btn" style="background: linear-gradient(135deg, #38bdf8, #3b82f6); margin-top: 12px;">회원가입</button>
+        </div>
+    </div>
+
+    <!-- 변경 로그 패널 -->
+    <div class="activity-log-panel" id="activityLogPanel">
+        <div class="activity-log-header">
+            <div class="activity-log-title">📋 변경 내역</div>
+            <button class="close-log-btn" id="closeLogBtn">×</button>
+        </div>
+        <div class="activity-log-content" id="activityLogContent">
+            <div class="log-empty">아직 변경 내역이 없습니다.</div>
         </div>
     </div>
 </body>
