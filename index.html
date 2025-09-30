@@ -1128,9 +1128,11 @@
         }
 
         .table-wrapper {
-            overflow-x: auto;
-            border-radius: 8px;
-        }
+		overflow-x: auto;
+		border-radius: 8px;
+		max-height: 500px; /* 테이블의 최대 높이를 500px로 제한 */
+		overflow-y: auto; /* 내용이 길어지면 세로 스크롤 생성 */
+		}
 
         .data-table {
             width: 100%;
@@ -1609,9 +1611,11 @@
                         <!-- 계약직 사원 테이블 -->
                         <div class="data-section">
                             <div class="section-header">
-                                <h3>💼 계약직 사원</h3>
-                                <button class="add-row-btn" data-table="permanent">+ 행 추가</button>
-                            </div>
+								<h3>💼 계약직 사원</h3>
+								<div> <button id="sort-permanent-btn" class="add-row-btn" style="background: linear-gradient(135deg, #fb923c, #f97316);">조별 정렬</button>
+									<button class="add-row-btn" data-table="permanent" style="margin-left: 10px;">+ 행 추가</button>
+								</div>
+							</div>
                             <div class="table-wrapper">
                                 <table class="data-table" id="permanent-table">
                                     <thead>
@@ -2555,6 +2559,35 @@
                 input.addEventListener('change', saveDataTabToFirestore);
                 input.addEventListener('input', saveDataTabToFirestore);
             });
+			
+			// 👇 '조별 정렬' 버튼 기능 추가
+			document.getElementById('sort-permanent-btn')?.addEventListener('click', () => {
+				const tbody = document.getElementById('permanent-tbody');
+				if (!tbody) return;
+
+				// 현재 테이블의 모든 행(tr)을 가져와서 배열로 만듭니다.
+				const rows = Array.from(tbody.querySelectorAll('tr'));
+
+				// 배열의 sort 기능을 사용해 정렬합니다.
+				rows.sort((rowA, rowB) => {
+				// 각 행에서 '조'를 선택하는 select 요소를 찾습니다.
+				const selectA = rowA.querySelector('select');
+				const selectB = rowB.querySelector('select');
+
+				// select 요소가 없으면 순서를 바꾸지 않습니다.
+				if (!selectA || !selectB) return 0;
+
+				// '조'의 값(A, B, C...)을 비교하여 정렬 순서를 결정합니다.
+				return selectA.value.localeCompare(selectB.value);
+			});
+
+			// 정렬된 순서대로 행들을 다시 테이블에 추가합니다.
+			rows.forEach(row => tbody.appendChild(row));
+
+			// 정렬된 순서를 서버에 저장합니다.
+			saveDataTabToFirestore();
+			alert('계약직 사원 목록이 조별로 정렬되었습니다.');
+		});
 
             // Firestore에서 데이터 불러오기
             loadDataTabFromFirestore();
@@ -2639,12 +2672,12 @@
             `
         };
 
-        // ★★★ 여기가 수정된 부분입니다 ★★★
-        // 이전에 문제가 있던 방식 대신, HTML 문자열을 직접 안전하게 삽입하는 방식으로 변경했습니다.
+        // ★★★ 여기가 수정된 부분 ★★★
+        // 이전에 문제가 있던 방식 대신, HTML 문자열을 직접 안전하게 삽입하는 방식으로 변경
         tbody.insertAdjacentHTML('beforeend', templates[tableType]);
-        const newRow = tbody.lastElementChild; // 방금 추가된 마지막 행을 정확히 찾습니다.
+        const newRow = tbody.lastElementChild; // 방금 추가된 마지막 행을 정확히 검색
 
-        // 새로 추가된 행의 모든 입력 요소에 이벤트 리스너를 다시 설정합니다.
+        // 새로 추가된 행의 모든 입력 요소에 이벤트 리스너를 재설정
         newRow.querySelectorAll('.data-input, .data-select, .skill-checkbox').forEach(input => {
             input.addEventListener('change', saveDataTabToFirestore);
             input.addEventListener('input', saveDataTabToFirestore);
