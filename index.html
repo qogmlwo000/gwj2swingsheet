@@ -931,12 +931,12 @@
                                         <tbody>
                                             <tr><td style="width: 80px; font-weight: 600; padding: 2px 4px; text-align: center;">OM/AM</td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td></tr>
 											<tr><td style="font-weight: 600; padding: 2px 4px; text-align: center;">T/C</td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td></tr>
-                                            <tr><td></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td></tr>
-                                            <tr><td></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td></tr>
-                                            <tr><td></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td></tr>
-                                            <tr><td></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td></tr>
-                                            <tr><td></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td><td style="padding: 2px;"><input type="text" class="report-input"></td></tr>
-                                            <tr style="border-top: 1px solid var(--border);"><td style="font-weight: 600; padding: 6px 4px; text-align: center;">Total</td><td id="report-manager-total" style="font-weight: 700; text-align: center;" colspan="3">0</td></tr>
+                                            <tr><td></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td></tr>
+<tr><td></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td></tr>
+<tr><td></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td></tr>
+<tr><td></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td></tr>
+<tr><td></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td><td style="padding: 2px;"><input type="text" class="report-input" placeholder="-"></td></tr>
+											<tr style="border-top: 1px solid var(--border);"><td style="font-weight: 600; padding: 6px 4px; text-align: center;">Total</td><td id="report-manager-total" style="font-weight: 700; text-align: center;" colspan="3">0</td></tr>
                                         </tbody>
                                     </table>
                                     <h3 style="font-size: 20px; font-weight: 800; color: var(--text-primary); margin: 20px 0 4px 0; letter-spacing: -0.5px; text-align: left; padding-top: 20px; padding-bottom: 14px; border-top: 2px solid var(--border);">📊 실시간 인원 현황</h3>
@@ -1123,8 +1123,8 @@
                     'temp-newbie-plan': 0, 'temp-newbie-actual': 0,
                 },
                 report: {
-                    managers: Array(24).fill('-'),
-                    remarks: Array(3).fill('-')
+                    managers: Array(24).fill(''),
+                    remarks: Array(3).fill('')
                 }
             };
         }
@@ -1136,10 +1136,12 @@
             });
 
             const managerInputs = document.querySelectorAll('#manager-report-table .report-input');
-            const managerData = Array.from(managerInputs).map(input => input.value);
+            // 빈 값은 빈 문자열로 저장
+            const managerData = Array.from(managerInputs).map(input => input.value.trim() || '');
             
-            const remarkInputs = document.querySelectorAll('#live-status-table .report-input');
-            const remarkData = Array.from(remarkInputs).map(input => input.value);
+            const remarkInputs = document.querySelectorAll('.report-remark');
+            // 빈 값은 빈 문자열로 저장
+            const remarkData = Array.from(remarkInputs).map(input => input.value.trim() || '');
 
             const dataToSave = {
                 staffing: staffingData,
@@ -1148,8 +1150,9 @@
                     remarks: remarkData
                 }
             };
+            
             setDoc(docRef, dataToSave, { merge: true });
-        }
+        }c
 
         function updateUIFromData(data) {
             // 인원 현황 데이터 채우기
@@ -1159,18 +1162,24 @@
                     if (input) input.value = data.staffing[id];
                 }
             }
+            
             // OB Report 데이터 채우기
             if (data.report && data.report.managers) {
                 const managerInputs = document.querySelectorAll('#manager-report-table .report-input');
                 managerInputs.forEach((input, index) => {
-                    input.value = data.report.managers[index] || '-';
+                    const value = data.report.managers[index];
+                    // '-'이면 빈 문자열로 처리 (placeholder가 보이도록)
+                    input.value = (value === '-' || !value) ? '' : value;
                 });
             }
-             // 실시간 인원 현황 비고 채우기
+            
+            // 실시간 인원 현황 비고 채우기
             if (data.report && data.report.remarks) {
-                const remarkInputs = document.querySelectorAll('#live-status-table .report-input');
+                const remarkInputs = document.querySelectorAll('.report-remark');
                 remarkInputs.forEach((input, index) => {
-                    input.value = data.report.remarks[index] || '-';
+                    const value = data.report.remarks[index];
+                    // '-'이면 빈 문자열로 처리 (placeholder가 보이도록)
+                    input.value = (value === '-' || !value) ? '' : value;
                 });
             }
 
