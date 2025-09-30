@@ -1665,10 +1665,12 @@
 
                         <!-- 단기직 사원 테이블 -->
                         <div class="data-section">
-                            <div class="section-header">
-                                <h3>📋 단기직 사원</h3>
-                                <button class="add-row-btn" data-table="temporary">+ 행 추가</button>
-                            </div>
+							<div class="section-header">
+								<h3>📋 단기직 사원</h3>
+								<div> <button id="sort-temporary-btn" class="add-row-btn" style="background: linear-gradient(135deg, #3b82f6, #60a5fa);">이름 정렬</button>
+									<button class="add-row-btn" data-table="temporary" style="margin-left: 10px;">+ 행 추가</button>
+								</div>
+							</div>
                             <div class="table-wrapper">
                                 <table class="data-table" id="temporary-table">
                                     <thead>
@@ -2587,6 +2589,35 @@
 			// 정렬된 순서를 서버에 저장합니다.
 			saveDataTabToFirestore();
 			alert('계약직 사원 목록이 조별로 정렬되었습니다.');
+		});
+		
+			// 👇 '이름 정렬' 버튼 기능 추가 (단기직)
+			document.getElementById('sort-temporary-btn')?.addEventListener('click', () => {
+				const tbody = document.getElementById('temporary-tbody');
+				if (!tbody) return;
+
+				// 현재 테이블의 모든 행(tr)을 가져와서 배열로 만듭니다.
+				const rows = Array.from(tbody.querySelectorAll('tr'));
+
+				// 배열의 sort 기능을 사용해 정렬합니다.
+				rows.sort((rowA, rowB) => {
+				// 각 행에서 이름이 입력되는 두 번째 input 요소를 찾습니다.
+				const inputA = rowA.querySelectorAll('.data-input')[1]; // 원바코드(0), 이름(1)
+				const inputB = rowB.querySelectorAll('.data-input')[1];
+
+				// input 요소가 없으면 순서를 바꾸지 않습니다.
+				if (!inputA || !inputB) return 0;
+
+				// 이름(input의 값)을 가나다순으로 비교하여 정렬 순서를 결정합니다.
+				return inputA.value.localeCompare(inputB.value);
+			});
+
+			// 정렬된 순서대로 행들을 다시 테이블에 추가합니다.
+			rows.forEach(row => tbody.appendChild(row));
+
+			// 정렬된 순서를 서버에 저장합니다.
+			saveDataTabToFirestore();
+			alert('단기직 사원 목록이 이름순으로 정렬되었습니다.');
 		});
 
             // Firestore에서 데이터 불러오기
