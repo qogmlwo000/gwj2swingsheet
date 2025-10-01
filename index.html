@@ -3532,18 +3532,16 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 		
 		// FLOW 탭 초기화
         function initializeFlowTab() {
-            // 원바코드 입력 시 자동 완성
             document.querySelectorAll('.flow-barcode-input').forEach(input => {
                 input.addEventListener('input', handleFlowBarcodeInput);
-                input.addEventListener('change', saveFlowDataToFirestore);
+                input.addEventListener('blur', saveFlowDataToFirestore);  // change 대신 blur
             });
 
-            // Role/비고 입력 시 저장
             document.querySelectorAll('.flow-role-input, .flow-remark-input').forEach(input => {
-                input.addEventListener('input', saveFlowDataToFirestore);
+                input.addEventListener('blur', saveFlowDataToFirestore);  // input 대신 blur
                 
                 if (input.classList.contains('flow-role-input')) {
-                    input.addEventListener('input', () => {
+                    input.addEventListener('blur', () => {  // input 대신 blur
                         const section = input.dataset.section;
                         if (section === 'tc') {
                             setTimeout(() => syncFlowToHome(), 100);
@@ -3789,35 +3787,38 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             //     totalElement.textContent = `${totalCount}명`;
             // }
         }
+		
+		let flowSaveTimeout = null;
 
-        // FLOW 데이터 저장
         function saveFlowDataToFirestore() {
-            const flowData = {
-                tc: [],
-                ps: [],
-                leave: [],
-                newbie: []
-            };
+            clearTimeout(flowSaveTimeout);
+            flowSaveTimeout = setTimeout(() => {
+                const flowData = {
+                    tc: [],
+                    ps: [],
+                    leave: [],
+                    newbie: []
+                };
 
-            // 각 섹션 데이터 수집
-            ['tc', 'ps', 'leave', 'newbie'].forEach(section => {
-                const rows = document.querySelectorAll(`.flow-barcode-input[data-section="${section}"]`);
-                
-                rows.forEach((input, index) => {
-                    const barcode = input.value.trim();
-                    const roleInput = document.querySelector(`.flow-role-input[data-section="${section}"][data-index="${index}"]`);
-                    const remarkInput = document.querySelector(`.flow-remark-input[data-section="${section}"][data-index="${index}"]`);
+                ['tc', 'ps', 'leave', 'newbie'].forEach(section => {
+                    const rows = document.querySelectorAll(`.flow-barcode-input[data-section="${section}"]`);
                     
-                    flowData[section].push({
-                        barcode: barcode,
-                        role: roleInput?.value.trim() || '',
-                        remark: remarkInput?.value.trim() || ''
+                    rows.forEach((input, index) => {
+                        const barcode = input.value.trim();
+                        const roleInput = document.querySelector(`.flow-role-input[data-section="${section}"][data-index="${index}"]`);
+                        const remarkInput = document.querySelector(`.flow-remark-input[data-section="${section}"][data-index="${index}"]`);
+                        
+                        flowData[section].push({
+                            barcode: barcode,
+                            role: roleInput?.value.trim() || '',
+                            remark: remarkInput?.value.trim() || ''
+                        });
                     });
                 });
-            });
 
-            const flowDocRef = doc(db, "flowData", "current");
-            setDoc(flowDocRef, flowData, { merge: true });
+                const flowDocRef = doc(db, "flowData", "current");
+                setDoc(flowDocRef, flowData, { merge: true });
+            }, 1000);  // 1초 지연
         }
 
         // FLOW 데이터 불러오기
