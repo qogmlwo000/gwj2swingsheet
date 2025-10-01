@@ -1731,6 +1731,39 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             const contentArea = document.getElementById('contentArea');
             if (!contentArea) return;
             
+            // ✅ FLOW 탭에서 나가는 경우 즉시 저장
+            const currentTab = document.querySelector('.tab-item.active')?.dataset.tab;
+            if (currentTab === 'flow') {
+                clearTimeout(flowSaveTimeout); // 디바운스 취소
+                
+                // 즉시 저장
+                const flowData = {
+                    tc: [],
+                    ps: [],
+                    leave: [],
+                    newbie: []
+                };
+
+                ['tc', 'ps', 'leave', 'newbie'].forEach(section => {
+                    const rows = document.querySelectorAll(`.flow-barcode-input[data-section="${section}"]`);
+                    
+                    rows.forEach((input, index) => {
+                        const barcode = input.value.trim();
+                        const roleInput = document.querySelector(`.flow-role-input[data-section="${section}"][data-index="${index}"]`);
+                        const remarkInput = document.querySelector(`.flow-remark-input[data-section="${section}"][data-index="${index}"]`);
+                        
+                        flowData[section].push({
+                            barcode: barcode,
+                            role: roleInput?.value.trim() || '',
+                            remark: remarkInput?.value.trim() || ''
+                        });
+                    });
+                });
+
+                const flowDocRef = doc(db, "flowData", "current");
+                setDoc(flowDocRef, flowData, { merge: true });
+            }
+            
             document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
             const selectedTab = document.querySelector(`[data-tab="${tabId}"]`);
             if (selectedTab) selectedTab.classList.add('active');
@@ -3407,34 +3440,41 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
     }
 
         // DATA 탭 저장
+        let dataSaveTimeout = null;
+        let isLocalUpdate = false; // 자신의 업데이트인지 표시
+
         function saveDataTabToFirestore() {
-            const tables = ['managers', 'tc', 'ps', 'permanent', 'temporary', 'newbie', 'cd'];
-            const dataToSave = {};
+            clearTimeout(dataSaveTimeout);
+            dataSaveTimeout = setTimeout(() => {
+                const tables = ['managers', 'tc', 'ps', 'permanent', 'temporary', 'newbie', 'cd'];
+                const dataToSave = {};
 
-            tables.forEach(tableType => {
-                const tbody = document.getElementById(`${tableType}-tbody`);
-                if (!tbody) return;
+                tables.forEach(tableType => {
+                    const tbody = document.getElementById(`${tableType}-tbody`);
+                    if (!tbody) return;
 
-                const rows = [];
-                tbody.querySelectorAll('tr').forEach(row => {
-                    const inputs = row.querySelectorAll('.data-input');
-                    const selects = row.querySelectorAll('.data-select');
-                    const checkboxes = row.querySelectorAll('.skill-checkbox');
+                    const rows = [];
+                    tbody.querySelectorAll('tr').forEach(row => {
+                        const inputs = row.querySelectorAll('.data-input');
+                        const selects = row.querySelectorAll('.data-select');
+                        const checkboxes = row.querySelectorAll('.skill-checkbox');
 
-                    const rowData = {
-                        inputs: Array.from(inputs).map(input => input.value),
-                        selects: Array.from(selects).map(select => select.value),
-                        checkboxes: Array.from(checkboxes).map(checkbox => checkbox.checked)
-                    };
+                        const rowData = {
+                            inputs: Array.from(inputs).map(input => input.value),
+                            selects: Array.from(selects).map(select => select.value),
+                            checkboxes: Array.from(checkboxes).map(checkbox => checkbox.checked)
+                        };
 
-                    rows.push(rowData);
+                        rows.push(rowData);
+                    });
+
+                    dataToSave[tableType] = rows;
                 });
 
-                dataToSave[tableType] = rows;
-            });
-
-            const dataDocRef = doc(db, "employeeData", "current");
-            setDoc(dataDocRef, dataToSave, { merge: true });
+                isLocalUpdate = true; // 자신의 업데이트임을 표시
+                const dataDocRef = doc(db, "employeeData", "current");
+                setDoc(dataDocRef, dataToSave, { merge: true });
+            }, 1000); // 1초 디바운스
         }
 
         // DATA 탭 불러오기
@@ -3443,6 +3483,13 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             onSnapshot(dataDocRef, (doc) => {
                 if (doc.exists()) {
                     const data = doc.data();
+                    
+                    // 자신의 업데이트면 복원 스킵
+                    if (isLocalUpdate) {
+                        isLocalUpdate = false;
+                        return;
+                    }
+                    
                     restoreDataTab(data);
                 }
             });
