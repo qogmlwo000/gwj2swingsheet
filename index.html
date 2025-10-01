@@ -1634,8 +1634,52 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 		
 		// 하드코딩된 사용자 계정 목록
         const users = [
+            { username: 'Aaron', password: '1234', displayName: 'Aaron' },
+            { username: 'Dua', password: '1234', displayName: 'Dua' },
+            { username: 'Ralph', password: '1234', displayName: 'Ralph' },
+            { username: 'David', password: '1234', displayName: 'David' },
+            { username: 'Jin', password: '1234', displayName: 'Jin' },
+            { username: 'Bron', password: '1234', displayName: 'Bron' },
+            { username: 'Sally', password: '1234', displayName: 'Sally' },
+            { username: 'Covy', password: '1234', displayName: 'Covy' },
+            { username: 'Leto', password: '1234', displayName: 'Leto' },
+            { username: 'Daniel', password: '1234', displayName: 'Daniel' },
+            { username: 'Sangyeong', password: '1234', displayName: 'Sangyeong' },
+            { username: 'Hwan', password: '1234', displayName: 'Hwan' },
+            { username: 'Ford', password: '1234', displayName: 'Ford' },
+            { username: 'Tory', password: '1234', displayName: 'Tory' },
+            { username: 'Stone', password: '1234', displayName: 'Stone' },
+            { username: 'Leks', password: '1234', displayName: 'Leks' },
+            { username: 'Steve', password: '1234', displayName: 'Steve' },
             { username: 'Bennett', password: '1234', displayName: 'Bennett' },
+            { username: 'Torres', password: '1234', displayName: 'Torres' },
+            { username: 'Freesia', password: '1234', displayName: 'Freesia' },
+            { username: 'Jessie', password: '1234', displayName: 'Jessie' },
+            { username: 'Garden', password: '1234', displayName: 'Garden' },
+            { username: 'Jonny', password: '1234', displayName: 'Jonny' },
+            { username: 'Beeny', password: '1234', displayName: 'Beeny' },
             { username: 'Leif', password: '1234', displayName: 'Leif' },
+            { username: 'Bambi', password: '1234', displayName: 'Bambi' },
+            { username: 'Winter', password: '1234', displayName: 'Winter' },
+            { username: 'Bruse', password: '1234', displayName: 'Bruse' },
+            { username: 'Cloud', password: '1234', displayName: 'Cloud' },
+            { username: 'Ronnie', password: '1234', displayName: 'Ronnie' },
+            { username: 'Rex', password: '1234', displayName: 'Rex' },
+            { username: 'Siwoo', password: '1234', displayName: 'Siwoo' },
+            { username: 'Zeta', password: '1234', displayName: 'Zeta' },
+            { username: 'Xenon', password: '1234', displayName: 'Xenon' },
+            { username: 'Damian', password: '1234', displayName: 'Damian' },
+            { username: 'Alan', password: '1234', displayName: 'Alan' },
+            { username: 'Colin', password: '1234', displayName: 'Colin' },
+            { username: 'Eric', password: '1234', displayName: 'Eric' },
+            { username: 'Zed', password: '1234', displayName: 'Zed' },
+            { username: 'Ras', password: '1234', displayName: 'Ras' },
+            { username: 'Tani', password: '1234', displayName: 'Tani' },
+            { username: 'Healer', password: '1234', displayName: 'Healer' },
+            { username: 'Loosie', password: '1234', displayName: 'Loosie' },
+            { username: 'Peon', password: '1234', displayName: 'Peon' },
+            { username: 'Owen', password: '1234', displayName: 'Owen' },
+            { username: 'Lily', password: '1234', displayName: 'Lily' },
             { username: 'Admin', password: 'admin123', displayName: 'Admin' }
         ];
 
@@ -2118,7 +2162,10 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 			if (tabId === 'flow') {
                 contentArea.innerHTML = `
                     <div class="flow-management">
-                        <h2 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin-bottom: 32px;">📋 FLOW 관리</h2>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+                            <h2 style="font-size: 28px; font-weight: 700; color: var(--text-primary); margin: 0;">📋 FLOW 관리</h2>
+                            <button id="clear-flow-btn" style="background: linear-gradient(135deg, #ef4444, #dc2626); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);">🗑️ 전체 초기화</button>
+                        </div>
                         
                         <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;">
                             <!-- Team Captain -->
@@ -3023,8 +3070,8 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 		
 		// DATA 탭 초기화
         function initializeDataTab() {
-            // 행 추가 버튼 이벤트
-            document.querySelectorAll('.add-row-btn').forEach(btn => {
+            // 행 추가 버튼 이벤트 (기존 + 새 디자인)
+            document.querySelectorAll('.add-row-btn, .add-row-btn-modern').forEach(btn => {
                 btn.addEventListener('click', (e) => {
                     const tableType = e.target.dataset.table;
                     addTableRow(tableType);
@@ -3049,79 +3096,62 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 input.addEventListener('change', saveDataTabToFirestore);
                 input.addEventListener('input', saveDataTabToFirestore);
             });
-			
-			// 👇 '조별 정렬' 버튼 기능 추가
-			document.getElementById('sort-permanent-btn')?.addEventListener('click', () => {
-				const tbody = document.getElementById('permanent-tbody');
-				if (!tbody) return;
+            
+            // 조별 정렬 버튼
+            document.getElementById('sort-permanent-btn')?.addEventListener('click', () => {
+                const tbody = document.getElementById('permanent-tbody');
+                if (!tbody) return;
 
-				// 현재 테이블의 모든 행(tr)을 가져와서 배열로 만듭니다.
-				const rows = Array.from(tbody.querySelectorAll('tr'));
+                const rows = Array.from(tbody.querySelectorAll('tr'));
 
-				// 배열의 sort 기능을 사용해 정렬합니다.
-				rows.sort((rowA, rowB) => {
-				// 각 행에서 '조'를 선택하는 select 요소를 찾습니다.
-				const selectA = rowA.querySelector('select');
-				const selectB = rowB.querySelector('select');
+                rows.sort((rowA, rowB) => {
+                    const selectA = rowA.querySelector('select');
+                    const selectB = rowB.querySelector('select');
 
-				// select 요소가 없으면 순서를 바꾸지 않습니다.
-				if (!selectA || !selectB) return 0;
+                    if (!selectA || !selectB) return 0;
 
-				// '조'의 값(A, B, C...)을 비교하여 정렬 순서를 결정합니다.
-				return selectA.value.localeCompare(selectB.value);
-			});
+                    return selectA.value.localeCompare(selectB.value);
+                });
 
-			// 정렬된 순서대로 행들을 다시 테이블에 추가합니다.
-			rows.forEach(row => tbody.appendChild(row));
+                rows.forEach(row => tbody.appendChild(row));
 
-			// 정렬된 순서를 서버에 저장합니다.
-			saveDataTabToFirestore();
-			alert('계약직 사원 목록이 조별로 정렬되었습니다.');
-		});
-		
-			// 👇 '이름 정렬' 버튼 기능 추가 (단기직)
-			document.getElementById('sort-temporary-btn')?.addEventListener('click', () => {
-				const tbody = document.getElementById('temporary-tbody');
-				if (!tbody) return;
+                saveDataTabToFirestore();
+                alert('계약직 사원 목록이 조별로 정렬되었습니다.');
+            });
+            
+            // 이름 정렬 버튼
+            document.getElementById('sort-temporary-btn')?.addEventListener('click', () => {
+                const tbody = document.getElementById('temporary-tbody');
+                if (!tbody) return;
 
-				// 현재 테이블의 모든 행(tr)을 가져와서 배열로 만듭니다.
-				const rows = Array.from(tbody.querySelectorAll('tr'));
+                const rows = Array.from(tbody.querySelectorAll('tr'));
 
-				// 배열의 sort 기능을 사용해 정렬합니다.
-				rows.sort((rowA, rowB) => {
-				// 각 행에서 이름이 입력되는 두 번째 input 요소를 찾습니다.
-				const inputA = rowA.querySelectorAll('.data-input')[1]; // 원바코드(0), 이름(1)
-				const inputB = rowB.querySelectorAll('.data-input')[1];
+                rows.sort((rowA, rowB) => {
+                    const inputA = rowA.querySelectorAll('.data-input')[1];
+                    const inputB = rowB.querySelectorAll('.data-input')[1];
 
-				// input 요소가 없으면 순서를 바꾸지 않습니다.
-				if (!inputA || !inputB) return 0;
+                    if (!inputA || !inputB) return 0;
 
-				// 이름(input의 값)을 가나다순으로 비교하여 정렬 순서를 결정합니다.
-				return inputA.value.localeCompare(inputB.value);
-			});
+                    return inputA.value.localeCompare(inputB.value);
+                });
 
-			// 정렬된 순서대로 행들을 다시 테이블에 추가합니다.
-			rows.forEach(row => tbody.appendChild(row));
+                rows.forEach(row => tbody.appendChild(row));
 
-			// 정렬된 순서를 서버에 저장합니다.
-			saveDataTabToFirestore();
-			alert('단기직 사원 목록이 이름순으로 정렬되었습니다.');
-		});
-		
-		// 👇 '전체 삭제' 버튼 기능 추가 (계약직)
+                saveDataTabToFirestore();
+                alert('단기직 사원 목록이 이름순으로 정렬되었습니다.');
+            });
+            
+            // 전체 삭제 버튼 (계약직)
             document.getElementById('clear-permanent-btn')?.addEventListener('click', () => {
-                // 사용자에게 확인 메시지 표시
                 if (!confirm('⚠️ 정말로 계약직 사원 전체 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
-                    return; // 취소하면 아무것도 하지 않음
+                    return;
                 }
                 
                 const tbody = document.getElementById('permanent-tbody');
                 if (!tbody) return;
                 
-                // 모든 행(tr) 삭제
                 tbody.innerHTML = '';
                 
-                // 빈 행 1개 추가 (최소 1개는 유지)
                 tbody.innerHTML = `
                     <tr class="data-row">
                         <td><input type="text" class="data-input" placeholder="원바코드"></td>
@@ -3149,32 +3179,27 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                     </tr>
                 `;
                 
-                // 새로 추가된 행의 입력 요소에 이벤트 리스너 재설정
                 const newRow = tbody.querySelector('tr');
                 newRow.querySelectorAll('.data-input, .data-select, .skill-checkbox').forEach(input => {
                     input.addEventListener('change', saveDataTabToFirestore);
                     input.addEventListener('input', saveDataTabToFirestore);
                 });
                 
-                // Firestore에 변경사항 저장
                 saveDataTabToFirestore();
                 alert('✅ 계약직 사원 데이터가 전체 삭제되었습니다.');
             });
             
-            // 👇 '전체 삭제' 버튼 기능 추가 (단기직)
+            // 전체 삭제 버튼 (단기직)
             document.getElementById('clear-temporary-btn')?.addEventListener('click', () => {
-                // 사용자에게 확인 메시지 표시
                 if (!confirm('⚠️ 정말로 단기직 사원 전체 데이터를 삭제하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
-                    return; // 취소하면 아무것도 하지 않음
+                    return;
                 }
                 
                 const tbody = document.getElementById('temporary-tbody');
                 if (!tbody) return;
                 
-                // 모든 행(tr) 삭제
                 tbody.innerHTML = '';
                 
-                // 빈 행 1개 추가 (최소 1개는 유지)
                 tbody.innerHTML = `
                     <tr class="data-row">
                         <td><input type="text" class="data-input" placeholder="원바코드"></td>
@@ -3190,22 +3215,20 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                     </tr>
                 `;
                 
-                // 새로 추가된 행의 입력 요소에 이벤트 리스너 재설정
                 const newRow = tbody.querySelector('tr');
                 newRow.querySelectorAll('.data-input, .data-select, .skill-checkbox').forEach(input => {
                     input.addEventListener('change', saveDataTabToFirestore);
                     input.addEventListener('input', saveDataTabToFirestore);
                 });
                 
-                // Firestore에 변경사항 저장
                 saveDataTabToFirestore();
                 alert('✅ 단기직 사원 데이터가 전체 삭제되었습니다.');
             });
 
             // 붙여넣기 이벤트 설정
             setupPasteListeners();
-			
-			// 테이블 너비 자동 조정
+            
+            // 테이블 너비 자동 조정
             document.querySelectorAll('.data-table th, .data-table td').forEach(cell => {
                 cell.removeAttribute('style');
             });
@@ -3527,6 +3550,53 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                         }
                     });
                 }
+            });
+
+            // 전체 초기화 버튼
+            document.getElementById('clear-flow-btn')?.addEventListener('click', () => {
+                if (!confirm('⚠️ FLOW 탭의 모든 데이터를 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
+                    return;
+                }
+                
+                // 모든 입력칸 초기화
+                document.querySelectorAll('.flow-barcode-input, .flow-role-input, .flow-remark-input').forEach(input => {
+                    input.value = '';
+                });
+                
+                // 모든 이름/닉네임/팀 초기화
+                document.querySelectorAll('.flow-name, .flow-nick, .flow-team').forEach(cell => {
+                    cell.textContent = '-';
+                });
+                
+                // 카운트 초기화
+                updateFlowCount();
+                
+                // Firestore에 빈 데이터 저장
+                const emptyFlowData = {
+                    tc: Array(20).fill({ barcode: '', role: '', remark: '' }),
+                    ps: Array(20).fill({ barcode: '', role: '', remark: '' }),
+                    leave: Array(20).fill({ barcode: '', remark: '' }),
+                    newbie: Array(35).fill({ barcode: '', remark: '' })
+                };
+                
+                const flowDocRef = doc(db, "flowData", "current");
+                setDoc(flowDocRef, emptyFlowData);
+                
+                // 변경 로그 기록
+                if (currentUser) {
+                    const logRef = doc(collection(db, "activityLogs"));
+                    setDoc(logRef, {
+                        user: currentUser.displayName,
+                        timestamp: new Date().getTime(),
+                        changes: [{
+                            field: 'FLOW 전체 초기화',
+                            oldValue: '기존 데이터',
+                            newValue: '초기화됨'
+                        }]
+                    });
+                }
+                
+                alert('✅ FLOW 탭이 전체 초기화되었습니다.');
             });
 
             // Firestore에서 데이터 불러오기
