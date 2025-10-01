@@ -2586,7 +2586,7 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 lastSavedData = JSON.parse(JSON.stringify(dataToSave));
                 
                 setDoc(docRef, dataToSave, { merge: true });
-            }, 5000);
+            }, 300);
         }
 		
 		// 자동 변경사항 감지 (모든 필드 자동 추적)
@@ -3479,7 +3479,7 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 isLocalUpdate = true; // 자신의 업데이트임을 표시
                 const dataDocRef = doc(db, "employeeData", "current");
                 setDoc(dataDocRef, dataToSave, { merge: true });
-            }, 1000); // 1초 디바운스
+            }, 300); // 1초 디바운스
         }
 
         // DATA 탭 불러오기
@@ -3602,51 +3602,54 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             });
 
             // 전체 초기화 버튼
-            document.getElementById('clear-flow-btn')?.addEventListener('click', () => {
-                if (!confirm('⚠️ FLOW 탭의 모든 데이터를 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
-                    return;
-                }
-                
-                // 모든 입력칸 초기화
-                document.querySelectorAll('.flow-barcode-input, .flow-role-input, .flow-remark-input').forEach(input => {
-                    input.value = '';
-                });
-                
-                // 모든 이름/닉네임/팀 초기화
-                document.querySelectorAll('.flow-name, .flow-nick, .flow-team').forEach(cell => {
-                    cell.textContent = '-';
-                });
-                
-                // 카운트 초기화
-                updateFlowCount();
-                
-                // Firestore에 빈 데이터 저장
-                const emptyFlowData = {
-                    tc: Array(20).fill({ barcode: '', role: '', remark: '' }),
-                    ps: Array(20).fill({ barcode: '', role: '', remark: '' }),
-                    leave: Array(20).fill({ barcode: '', remark: '' }),
-                    newbie: Array(35).fill({ barcode: '', remark: '' })
-                };
-                
-                const flowDocRef = doc(db, "flowData", "current");
-                setDoc(flowDocRef, emptyFlowData);
-                
-                // 변경 로그 기록
-                if (currentUser) {
-                    const logRef = doc(collection(db, "activityLogs"));
-                    setDoc(logRef, {
-                        user: currentUser.displayName,
-                        timestamp: new Date().getTime(),
-                        changes: [{
-                            field: 'FLOW 전체 초기화',
-                            oldValue: '기존 데이터',
-                            newValue: '초기화됨'
-                        }]
-                    });
-                }
-                
-                alert('✅ FLOW 탭이 전체 초기화되었습니다.');
-            });
+		document.getElementById('clear-flow-btn')?.addEventListener('click', async () => {
+		    if (!confirm('⚠️ FLOW 탭의 모든 데이터를 초기화하시겠습니까?\n\n이 작업은 되돌릴 수 없습니다!')) {
+		        return;
+		    }
+
+		    // 모든 입력칸 초기화
+		    document.querySelectorAll('.flow-barcode-input, .flow-role-input, .flow-remark-input').forEach(input => {
+		        input.value = '';
+		    });
+
+		    // 모든 이름/닉네임/팀 초기화
+		    document.querySelectorAll('.flow-name, .flow-nick, .flow-team').forEach(cell => {
+		        cell.textContent = '-';
+		    });
+
+		    // 카운트 초기화
+		    updateFlowCount();
+
+		    // Firestore에 빈 데이터 저장
+		    const emptyFlowData = {
+		        tc: Array(20).fill({ barcode: '', role: '', remark: '' }),
+		        ps: Array(20).fill({ barcode: '', role: '', remark: '' }),
+		        leave: Array(20).fill({ barcode: '', remark: '' }),
+		        newbie: Array(35).fill({ barcode: '', remark: '' })
+		    };
+
+		    const flowDocRef = doc(db, "flowData", "current");
+		    setDoc(flowDocRef, emptyFlowData);
+
+		    // HOME 탭 리포트를 동기화하는 코드를 호출합니다.
+		    await syncFlowTcsToHomeReport();
+
+		    // 변경 로그 기록
+		    if (currentUser) {
+		        const logRef = doc(collection(db, "activityLogs"));
+		        setDoc(logRef, {
+		            user: currentUser.displayName,
+		            timestamp: new Date().getTime(),
+		            changes: [{
+		                field: 'FLOW 전체 초기화',
+		                oldValue: '기존 데이터',
+		                newValue: '초기화됨'
+		            }]
+		        });
+		    }
+
+		    alert('✅ FLOW 탭이 전체 초기화되었습니다.');
+		});
 
             // Firestore에서 데이터 불러오기
             loadFlowDataFromFirestore();
@@ -3769,48 +3772,39 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
         }
 
         // 원바코드 입력 처리
-        async function handleFlowBarcodeInput(e) {
-            const input = e.target;
-            const barcode = input.value.trim();
-            const section = input.dataset.section;
-            const index = input.dataset.index;
+		async function handleFlowBarcodeInput(e) {
+		    const input = e.target;
+		    const barcode = input.value.trim();
+		    const section = input.dataset.section;
+		    const index = input.dataset.index;
 
-            if (!barcode) {
-                const nameCell = document.querySelector(`.flow-name[data-section="${section}"][data-index="${index}"]`);
-                const nickCell = document.querySelector(`.flow-nick[data-section="${section}"][data-index="${index}"]`);
-                const teamCell = document.querySelector(`.flow-team[data-section="${section}"][data-index="${index}"]`);
-                
-                if (nameCell) nameCell.textContent = '-';
-                if (nickCell) nickCell.textContent = '-';
-                if (teamCell) teamCell.textContent = '-';
-                
-                updateFlowCount();
-                return;
-            }
+		    const nameCell = document.querySelector(`.flow-name[data-section="${section}"][data-index="${index}"]`);
+		    const nickCell = document.querySelector(`.flow-nick[data-section="${section}"][data-index="${index}"]`);
+		    const teamCell = document.querySelector(`.flow-team[data-section="${section}"][data-index="${index}"]`);
 
-            const employee = await findEmployeeByBarcode(barcode);
+		    if (!barcode) {
+		        if (nameCell) nameCell.textContent = '-';
+		        if (nickCell) nickCell.textContent = '-';
+		        if (teamCell) teamCell.textContent = '-';
+		    } else {
+		        const employee = await findEmployeeByBarcode(barcode);
+		        if (employee) {
+		            if (nameCell) nameCell.textContent = employee.name;
+		            if (nickCell) nickCell.textContent = employee.nickname;
+		            if (teamCell) teamCell.textContent = employee.team;
+		        } else {
+		            if (nameCell) nameCell.textContent = '⚠️ 미등록';
+		            if (nickCell) nickCell.textContent = '-';
+		            if (teamCell) teamCell.textContent = '-';
+		        }
+		    }
 
-            const nameCell = document.querySelector(`.flow-name[data-section="${section}"][data-index="${index}"]`);
-            const nickCell = document.querySelector(`.flow-nick[data-section="${section}"][data-index="${index}"]`);
-            const teamCell = document.querySelector(`.flow-team[data-section="${section}"][data-index="${index}"]`);
+		    updateFlowCount();
 
-            if (employee) {
-                if (nameCell) nameCell.textContent = employee.name;
-                if (nickCell) nickCell.textContent = employee.nickname;
-                if (teamCell) teamCell.textContent = employee.team;
-            } else {
-                if (nameCell) nameCell.textContent = '⚠️ 미등록';
-                if (nickCell) nickCell.textContent = '-';
-                if (teamCell) teamCell.textContent = '-';
-            }
-
-            updateFlowCount();
-            
-            // ❌ 이 부분 삭제
-            // if (section === 'tc') {
-            //     setTimeout(() => syncFlowToHome(), 100);
-            // }
-        }
+		    if (section === 'tc') {
+		        await syncFlowTcsToHomeReport();
+		    }
+		}
 
         // 인원 카운트 업데이트
         function updateFlowCount() {
@@ -3867,7 +3861,7 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 
                 const flowDocRef = doc(db, "flowData", "current");
                 setDoc(flowDocRef, flowData, { merge: true });
-            }, 1000);  // 1초 지연
+            }, 300);  // 1초 지연
         }
 
         // FLOW 데이터 불러오기
@@ -3935,6 +3929,58 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 console.error('동기화 오류:', error);
             }
         }
+		
+		// ✅ [새로 추가된 함수] FLOW 탭의 T/C 정보를 HOME 탭 리포트에 동기화
+		async function syncFlowTcsToHomeReport() {
+			try {
+				// 1. 현재 FLOW 탭에 입력된 T/C 닉네임 목록을 가져옵니다.
+				const tcNicknames = [];
+				const tcRows = document.querySelectorAll('.flow-barcode-input[data-section="tc"]');
+				
+				tcRows.forEach((input, index) => {
+					const barcode = input.value.trim();
+					if (barcode) {
+						const nickCell = document.querySelector(`.flow-nick[data-section="tc"][data-index="${index}"]`);
+						const nickname = nickCell ? nickCell.textContent.trim() : '-';
+						if (nickname && nickname !== '-') {
+							tcNicknames.push(nickname);
+						}
+					}
+				});
+
+				// 2. Firestore에서 현재 HOME 탭의 리포트 데이터를 가져옵니다.
+				const homeReportDocRef = doc(db, "reports", "today");
+				const docSnap = await getDoc(homeReportDocRef);
+
+				if (!docSnap.exists()) {
+					console.error("HOME 탭의 리포트 데이터를 찾을 수 없습니다.");
+					return;
+				}
+
+				const reportData = docSnap.data();
+
+				// 3. 가져온 리포트 데이터에서 T/C 부분만 새로 만든 닉네임 목록으로 교체합니다.
+				// OM/AM (3칸)은 그대로 두고, 그 뒤부터 T/C 닉네임을 채웁니다.
+				const omAmData = reportData.report.managers.slice(0, 3);
+				const newTcData = Array(21).fill(''); // T/C 칸은 총 21개
+
+				tcNicknames.forEach((name, i) => {
+					if (i < newTcData.length) {
+						newTcData[i] = name;
+					}
+				});
+
+				// OM/AM 데이터와 새로운 T/C 데이터를 합칩니다.
+				reportData.report.managers = [...omAmData, ...newTcData];
+
+				// 4. 변경된 데이터를 다시 Firestore에 저장합니다.
+				// 이렇게 저장하면 HOME 탭을 보고 있는 모든 사용자에게 실시간으로 반영됩니다.
+				await setDoc(homeReportDocRef, reportData);
+
+			} catch (error) {
+				console.error('HOME 탭 리포트 동기화 중 오류 발생:', error);
+			}
+		}
     </script>
 	
 	<!-- 로그인 -->
