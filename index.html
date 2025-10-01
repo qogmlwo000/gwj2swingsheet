@@ -1845,10 +1845,9 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                         updateUIFromData(cachedData);
                     }
                     
-                    // FLOW 데이터가 있으면 자동 동기화
+                    // FLOW 데이터를 HOME에 동기화
                     syncFlowToHome();
                     
-                    // Admin 사용자면 관리자 패널 다시 표시
                     if (currentUser && currentUser.username.toLowerCase() === 'admin') {
                         showAdminPanel();
                     }
@@ -3725,7 +3724,6 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             const index = input.dataset.index;
 
             if (!barcode) {
-                // 비우면 이름도 초기화
                 const nameCell = document.querySelector(`.flow-name[data-section="${section}"][data-index="${index}"]`);
                 const nickCell = document.querySelector(`.flow-nick[data-section="${section}"][data-index="${index}"]`);
                 const teamCell = document.querySelector(`.flow-team[data-section="${section}"][data-index="${index}"]`);
@@ -3738,7 +3736,6 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 return;
             }
 
-            // 사원 정보 조회
             const employee = await findEmployeeByBarcode(barcode);
 
             const nameCell = document.querySelector(`.flow-name[data-section="${section}"][data-index="${index}"]`);
@@ -3756,11 +3753,11 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             }
 
             updateFlowCount();
-		
-		// Team Captain이면 HOME 탭에 자동 동기화
-            if (section === 'tc') {
-                setTimeout(() => syncFlowToHome(), 100);
-            }
+            
+            // ❌ 이 부분 삭제
+            // if (section === 'tc') {
+            //     setTimeout(() => syncFlowToHome(), 100);
+            // }
         }
 
         // 인원 카운트 업데이트
@@ -3854,53 +3851,23 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             });
         }
 		
-		async function syncFlowToHome() {
-            const flowDocRef = doc(db, "flowData", "current");
-            const dataDocRef = doc(db, "employeeData", "current");
-            
+		function syncFlowToHome() {
             try {
-                const flowSnap = await getDoc(flowDocRef);
-                const employeeSnap = await getDoc(dataDocRef);
-                
-                if (!flowSnap.exists() || !employeeSnap.exists()) return;
-                
-                const flowData = flowSnap.data();
-                const employeeData = employeeSnap.data();
-                
-                if (!flowData.tc) return;
-                
-                // ❌ 초기화 로직 삭제 (아래 4줄 제거)
-                // for (let i = 0; i < 21; i++) {
-                //     const input = document.getElementById(`tc-report-${i}`);
-                //     if (input) input.value = '';
-                // }
+                // Firestore 대신 현재 DOM에서 직접 읽기
+                const tcBarcodeInputs = document.querySelectorAll('.flow-barcode-input[data-section="tc"]');
                 
                 let reportIndex = 0;
                 
-                flowData.tc.forEach((item) => {
-                    if (!item.barcode) return;
+                tcBarcodeInputs.forEach((barcodeInput, index) => {
+                    const barcode = barcodeInput.value.trim();
+                    if (!barcode) return;
                     
-                    let nickname = '-';
+                    // 해당 원바코드의 닉네임을 FLOW DOM에서 직접 읽기
+                    const nickCell = document.querySelector(`.flow-nick[data-section="tc"][data-index="${index}"]`);
+                    const nickname = nickCell?.textContent || '-';
                     
-                    if (employeeData.managers) {
-                        for (const row of employeeData.managers) {
-                            if (row.inputs?.[0] === item.barcode) {
-                                nickname = row.inputs[1] || '-';
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (nickname === '-' && employeeData.tc) {
-                        for (const row of employeeData.tc) {
-                            if (row.inputs?.[0] === item.barcode) {
-                                nickname = row.inputs[1] || '-';
-                                break;
-                            }
-                        }
-                    }
-                    
-                    if (nickname !== '-') {
+                    // 닉네임이 유효하면 HOME에 기입
+                    if (nickname && nickname !== '-') {
                         const reportInput = document.getElementById(`tc-report-${reportIndex}`);
                         if (reportInput) {
                             reportInput.value = nickname;
@@ -3909,10 +3876,8 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                     }
                 });
                 
-                setTimeout(() => {
-                    updateReportTotal();
-                    saveDataToFirestore();
-                }, 100);
+                // Total 업데이트
+                updateReportTotal();
                 
             } catch (error) {
                 console.error('동기화 오류:', error);
