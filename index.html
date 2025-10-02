@@ -1606,18 +1606,28 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getDatabase, ref, set, onValue, update, remove, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 		
-		// 입력중 전역변수
+		// 최적화된 전역 변수
         let typingTimeout = null;
-        let isTyping = false;
         let saveTimeout = null;
         let lastSavedData = {};
+        const DEBOUNCE_TIME = 500;
 
+        let pendingChanges = {
+            home: null,
+            data: null,
+            flow: null
+        };
+
+        let lastTypingNotify = 0;
+        let lastUpdateTime = {};
+		
         // Firebase API KEY
         const firebaseConfig = {
             apiKey: "AIzaSyDhYh-C1Zsv7PjRq0kHBNDUf8JMcxTV_l4",
             authDomain: "gwj2swingsheet.firebaseapp.com",
+			databaseURL: "https://gwj2swingsheet-default-rtdb.asia-southeast1.firebasedatabase.app",  // 이 줄 추가 (선택)
             projectId: "gwj2swingsheet",
             storageBucket: "gwj2swingsheet.appspot.com",
             messagingSenderId: "336629205001",
@@ -1627,10 +1637,9 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const db = getFirestore(app);
-        const docRef = doc(db, "reports", "today");
+        const db = getDatabase(app);
 		let cachedData = null;
-        let currentUser = null;
+        let currentUser = null;  // 👈 이 줄 추가!
 		
 		// 하드코딩된 사용자 계정 목록
         const users = [
@@ -1736,38 +1745,7 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             const contentArea = document.getElementById('contentArea');
             if (!contentArea) return;
             
-            // ✅ FLOW 탭에서 나가는 경우 즉시 저장
-            const currentTab = document.querySelector('.tab-item.active')?.dataset.tab;
-            if (currentTab === 'flow') {
-                clearTimeout(flowSaveTimeout); // 디바운스 취소
-                
-                // 즉시 저장
-                const flowData = {
-                    tc: [],
-                    ps: [],
-                    leave: [],
-                    newbie: []
-                };
-
-                ['tc', 'ps', 'leave', 'newbie'].forEach(section => {
-                    const rows = document.querySelectorAll(`.flow-barcode-input[data-section="${section}"]`);
-                    
-                    rows.forEach((input, index) => {
-                        const barcode = input.value.trim();
-                        const roleInput = document.querySelector(`.flow-role-input[data-section="${section}"][data-index="${index}"]`);
-                        const remarkInput = document.querySelector(`.flow-remark-input[data-section="${section}"][data-index="${index}"]`);
-                        
-                        flowData[section].push({
-                            barcode: barcode,
-                            role: roleInput?.value.trim() || '',
-                            remark: remarkInput?.value.trim() || ''
-                        });
-                    });
-                });
-
-                const flowDocRef = doc(db, "flowData", "current");
-                setDoc(flowDocRef, flowData, { merge: true });
-            }
+            saveImmediately();
             
             document.querySelectorAll('.tab-item').forEach(tab => tab.classList.remove('active'));
             const selectedTab = document.querySelector(`[data-tab="${tabId}"]`);
@@ -1879,12 +1857,24 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 `;
                  setTimeout(() => {
                     initializeHomeTabListeners();
+                    
+                    // 캐시된 데이터로 UI 업데이트
                     if (cachedData) {
                         updateUIFromData(cachedData);
                     }
                     
-                    // FLOW 데이터를 HOME에 동기화
-                    syncFlowToHome();
+                    // FLOW의 T/C를 HOME에 즉시 반영
+                    const tcInputs = Array.from(document.querySelectorAll('[id^="tc-report-"]'));
+                    if (tcInputs.length > 0 && cachedData?.report?.managers) {
+                        const managers = cachedData.report.managers;
+                        tcInputs.forEach((input, i) => {
+                            const value = managers[i + 3]; // OM/AM 3칸 건너뛰고
+                            if (value !== undefined) {
+                                input.value = value || '';
+                            }
+                        });
+                        updateReportTotal();
+                    }
                     
                     if (currentUser && currentUser.username.toLowerCase() === 'admin') {
                         showAdminPanel();
@@ -2446,14 +2436,16 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
         function initializeHomeTabListeners() {
             document.querySelectorAll('.staffing-input, .report-input').forEach(input => {
                 input.addEventListener('input', () => {
-                    saveDataToFirestore();
+                    const data = collectHomeData();
+                    scheduleSave('home', data);
                     notifyTyping();
                 });
             });
             document.getElementById('reset-btn')?.addEventListener('click', () => {
                 if (confirm('정말로 모든 값을 0으로 초기화하시겠습니까?')) {
                     const defaultData = getInitialData();
-                    setDoc(docRef, defaultData);
+                    const homeRef = ref(db, 'reports/today');
+                    set(homeRef, defaultData);
                     alert('모든 값이 0으로 초기화되었습니다.');
                 }
             });
@@ -2491,42 +2483,52 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             localStorage.setItem("color-theme", newTheme);
         });
 
-        // Firestore 데이터 리스너 설정
-        onSnapshot(docRef, (doc) => {
+        // Realtime Database 리스너 설정
+        const homeRef = ref(db, 'reports/today');
+        onValue(homeRef, (snapshot) => {
             updateConnectionStatus(true);
-            if (doc.exists()) {
-                cachedData = doc.data();
-                updateUIFromData(cachedData);
-            } else {
-                console.log("No such document! Creating with initial data.");
-                setDoc(docRef, getInitialData());
+            
+            if (!snapshot.exists()) {
+                set(homeRef, getInitialData());
+                return;
             }
+            
+            const newData = snapshot.val();
+            const dataHash = JSON.stringify(newData);
+            
+            if (cachedData && JSON.stringify(cachedData) === dataHash) {
+                return;
+            }
+            
+            cachedData = newData;
+            updateUIFromData(cachedData);
         }, (error) => {
             console.error('Connection error:', error);
             updateConnectionStatus(false);
         });
 		
-		// 타이핑 상태 리스너 - 컬렉션 전체 감시
-        const typingCollectionRef = collection(db, "typing");
-        onSnapshot(typingCollectionRef, (snapshot) => {
+		// 타이핑 상태 리스너
+        const typingRef = ref(db, 'typing');
+        onValue(typingRef, (snapshot) => {
             const typingIndicator = document.getElementById('typingIndicator');
             const typingUser = document.getElementById('typingUser');
             
             if (!typingIndicator || !typingUser) return;
             
-            const now = new Date().getTime();
+            const now = Date.now();
             const typingUsers = [];
+            const data = snapshot.val();
             
-            snapshot.forEach((doc) => {
-                const data = doc.data();
-                // 5초 이내 & 본인 아닌 경우만
-                if (data.displayName && 
-                    data.timestamp && 
-                    (now - data.timestamp < 5000) &&
-                    data.displayName !== currentUser?.displayName) {
-                    typingUsers.push(data.displayName);
-                }
-            });
+            if (data) {
+                Object.values(data).forEach(user => {
+                    if (user.displayName && 
+                        user.timestamp && 
+                        (now - user.timestamp < 5000) &&
+                        user.displayName !== currentUser?.displayName) {
+                        typingUsers.push(user.displayName);
+                    }
+                });
+            }
             
             if (typingUsers.length > 0) {
                 if (typingUsers.length === 1) {
@@ -2556,37 +2558,114 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             };
         }
         
-        function saveDataToFirestore() {
+        function collectHomeData() {
             const staffingData = {};
             document.querySelectorAll('.staffing-input').forEach(input => {
                 staffingData[input.id] = parseInt(input.value) || 0;
             });
 
-            const managerInputs = document.querySelectorAll('#manager-report-table .report-input');
-            const managerData = Array.from(managerInputs).map(input => input.value.trim() || '');
+            const managerData = Array.from(
+                document.querySelectorAll('#manager-report-table .report-input')
+            ).map(input => input.value.trim() || '');
             
-            const remarkInputs = document.querySelectorAll('.report-remark');
-            const remarkData = Array.from(remarkInputs).map(input => input.value.trim() || '');
+            const remarkData = Array.from(
+                document.querySelectorAll('.report-remark')
+            ).map(input => input.value.trim() || '');
 
-            const dataToSave = {
+            return {
                 staffing: staffingData,
                 report: {
                     managers: managerData,
                     remarks: remarkData
                 }
             };
-            
-            // 5초 디바운스 - 마지막 수정만 기록
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                // 변경사항 로그 기록 (자동 감지)
-                if (Object.keys(lastSavedData).length > 0) {
-                    logChangesAuto(lastSavedData, dataToSave);
-                }
-                lastSavedData = JSON.parse(JSON.stringify(dataToSave));
+        }
+
+        function collectDataTabData() {
+            const tables = ['managers', 'tc', 'ps', 'permanent', 'temporary', 'newbie', 'cd'];
+            const result = {};
+
+            tables.forEach(tableType => {
+                const tbody = document.getElementById(`${tableType}-tbody`);
+                if (!tbody) return;
+
+                result[tableType] = Array.from(tbody.querySelectorAll('tr')).map(row => ({
+                    inputs: Array.from(row.querySelectorAll('.data-input')).map(i => i.value),
+                    selects: Array.from(row.querySelectorAll('.data-select')).map(s => s.value),
+                    checkboxes: Array.from(row.querySelectorAll('.skill-checkbox')).map(c => c.checked)
+                }));
+            });
+
+            return result;
+        }
+
+        function collectFlowData() {
+            const result = { tc: [], ps: [], leave: [], newbie: [] };
+
+            ['tc', 'ps', 'leave', 'newbie'].forEach(section => {
+                const rows = document.querySelectorAll(`.flow-barcode-input[data-section="${section}"]`);
                 
-                setDoc(docRef, dataToSave, { merge: true });
-            }, 300);
+                result[section] = Array.from(rows).map((input, index) => ({
+                    barcode: input.value.trim(),
+                    role: document.querySelector(`.flow-role-input[data-section="${section}"][data-index="${index}"]`)?.value.trim() || '',
+                    remark: document.querySelector(`.flow-remark-input[data-section="${section}"][data-index="${index}"]`)?.value.trim() || ''
+                }));
+            });
+
+            return result;
+        }
+
+        function scheduleSave(section, data) {
+            pendingChanges[section] = data;
+            
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(async () => {
+                try {
+                    const updates = {};
+                    
+                    if (pendingChanges.home) {
+                        if (Object.keys(lastSavedData).length > 0) {
+                            logChangesAuto(lastSavedData, pendingChanges.home);
+                        }
+                        lastSavedData = JSON.parse(JSON.stringify(pendingChanges.home));
+                        updates['/reports/today'] = pendingChanges.home;
+                    }
+                    if (pendingChanges.data) {
+                        updates['/employeeData/current'] = pendingChanges.data;
+                    }
+                    if (pendingChanges.flow) {
+                        updates['/flowData/current'] = pendingChanges.flow;
+                    }
+                    
+                    await update(ref(db), updates);
+                    pendingChanges = { home: null, data: null, flow: null };
+                } catch (error) {
+                    console.error('저장 오류:', error);
+                }
+            }, DEBOUNCE_TIME);
+        }
+
+        async function saveImmediately() {
+            clearTimeout(saveTimeout);
+            
+            try {
+                const updates = {};
+                
+                if (pendingChanges.home) {
+                    updates['/reports/today'] = pendingChanges.home;
+                }
+                if (pendingChanges.data) {
+                    updates['/employeeData/current'] = pendingChanges.data;
+                }
+                if (pendingChanges.flow) {
+                    updates['/flowData/current'] = pendingChanges.flow;
+                }
+                
+                await update(ref(db), updates);
+                pendingChanges = { home: null, data: null, flow: null };
+            } catch (error) {
+                console.error('즉시 저장 오류:', error);
+            }
         }
 		
 		// 자동 변경사항 감지 (모든 필드 자동 추적)
@@ -2634,12 +2713,13 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             
             findChanges(oldData, newData);
             
-            // 변경사항이 있으면 Firestore에 저장
+            // 변경사항이 있으면 Realtime Database에 저장
             if (changes.length > 0) {
-                const logRef = doc(collection(db, "activityLogs"));
-                setDoc(logRef, {
+                const logKey = `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const logRef = ref(db, `activityLogs/${logKey}`);
+                set(logRef, {
                     user: currentUser.displayName,
-                    timestamp: new Date().getTime(),
+                    timestamp: Date.now(),
                     changes: changes
                 });
             }
@@ -2657,20 +2737,20 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
         
         // 로그 불러오기
         function loadActivityLogs() {
-            const logsCollectionRef = collection(db, "activityLogs");
+            const logsRef = ref(db, 'activityLogs');
             
-            onSnapshot(logsCollectionRef, (snapshot) => {
+            onValue(logsRef, (snapshot) => {
                 const logs = [];
-                const sevenDaysAgo = new Date().getTime() - (7 * 24 * 60 * 60 * 1000);
+                const sevenDaysAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
                 
-                snapshot.forEach((docSnapshot) => {
-                    const data = docSnapshot.data();
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
                     
                     // 7일 이상 된 로그는 삭제
                     if (data.timestamp < sevenDaysAgo) {
-                        docSnapshot.ref.delete();
+                        remove(ref(db, `activityLogs/${childSnapshot.key}`));
                     } else {
-                        logs.push({ id: docSnapshot.id, ...data });
+                        logs.push({ id: childSnapshot.key, ...data });
                     }
                 });
                 
@@ -2679,8 +2759,6 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 
                 // 최근 20개만 표시
                 displayActivityLogs(logs.slice(0, 20));
-            }, (error) => {
-                console.error('로그 로딩 에러:', error);
             });
         }
         
@@ -2790,20 +2868,20 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
         function notifyTyping() {
             if (!currentUser) return;
             
-            // 각 사용자별 문서로 저장
-            const typingRef = doc(db, "typing", currentUser.username);
-            setDoc(typingRef, {
+            const now = Date.now();
+            if (now - lastTypingNotify < 2000) return;
+            
+            lastTypingNotify = now;
+            
+            const userTypingRef = ref(db, `typing/${currentUser.username}`);
+            set(userTypingRef, {
                 displayName: currentUser.displayName,
-                timestamp: new Date().getTime()
+                timestamp: now
             });
             
-            // 3초 후 타이핑 상태 제거
             clearTimeout(typingTimeout);
             typingTimeout = setTimeout(() => {
-                setDoc(typingRef, {
-                    displayName: null,
-                    timestamp: null
-                });
+                set(userTypingRef, null);
             }, 3000);
         }
 
@@ -2812,7 +2890,9 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             if (data.staffing) {
                 for (const id in data.staffing) {
                     const input = document.getElementById(id);
-                    if (input) input.value = data.staffing[id];
+                    if (input && input.value !== String(data.staffing[id])) {
+                        input.value = data.staffing[id];
+                    }
                 }
             }
             
@@ -2821,8 +2901,10 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 const managerInputs = document.querySelectorAll('#manager-report-table .report-input');
                 managerInputs.forEach((input, index) => {
                     const value = data.report.managers[index];
-                    // '-'이면 빈 문자열로 처리 (placeholder가 보이도록)
-                    input.value = (value === '-' || !value) ? '' : value;
+                    const displayValue = (value === '-' || !value) ? '' : value;
+                    if (input.value !== displayValue) {
+                        input.value = displayValue;
+                    }
                 });
             }
             
@@ -2831,8 +2913,10 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                 const remarkInputs = document.querySelectorAll('.report-remark');
                 remarkInputs.forEach((input, index) => {
                     const value = data.report.remarks[index];
-                    // '-'이면 빈 문자열로 처리 (placeholder가 보이도록)
-                    input.value = (value === '-' || !value) ? '' : value;
+                    const displayValue = (value === '-' || !value) ? '' : value;
+                    if (input.value !== displayValue) {
+                        input.value = displayValue;
+                    }
                 });
             }
 
@@ -3445,60 +3529,21 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
     }
 
         // DATA 탭 저장
-        let dataSaveTimeout = null;
-        let isLocalUpdate = false; // 자신의 업데이트인지 표시
-
         function saveDataTabToFirestore() {
-            clearTimeout(dataSaveTimeout);
-            dataSaveTimeout = setTimeout(() => {
-                const tables = ['managers', 'tc', 'ps', 'permanent', 'temporary', 'newbie', 'cd'];
-                const dataToSave = {};
-
-                tables.forEach(tableType => {
-                    const tbody = document.getElementById(`${tableType}-tbody`);
-                    if (!tbody) return;
-
-                    const rows = [];
-                    tbody.querySelectorAll('tr').forEach(row => {
-                        const inputs = row.querySelectorAll('.data-input');
-                        const selects = row.querySelectorAll('.data-select');
-                        const checkboxes = row.querySelectorAll('.skill-checkbox');
-
-                        const rowData = {
-                            inputs: Array.from(inputs).map(input => input.value),
-                            selects: Array.from(selects).map(select => select.value),
-                            checkboxes: Array.from(checkboxes).map(checkbox => checkbox.checked)
-                        };
-
-                        rows.push(rowData);
-                    });
-
-                    dataToSave[tableType] = rows;
-                });
-
-                isLocalUpdate = true; // 자신의 업데이트임을 표시
-                const dataDocRef = doc(db, "employeeData", "current");
-                setDoc(dataDocRef, dataToSave, { merge: true });
-            }, 300); // 1초 디바운스
+            const data = collectDataTabData();
+            scheduleSave('data', data);
         }
 
         // DATA 탭 불러오기
         function loadDataTabFromFirestore() {
-            const dataDocRef = doc(db, "employeeData", "current");
-            onSnapshot(dataDocRef, (doc) => {
-                if (doc.exists()) {
-                    const data = doc.data();
-                    
-                    // 자신의 업데이트면 복원 스킵
-                    if (isLocalUpdate) {
-                        isLocalUpdate = false;
-                        return;
-                    }
-                    
-                    restoreDataTab(data);
-                }
-            });
-        }
+			const dataRef = ref(db, 'employeeData/current');
+			onValue(dataRef, (snapshot) => {
+				if (snapshot.exists()) {
+					const data = snapshot.val();
+					restoreDataTab(data);
+				}
+			});
+		}
 									
 		// DATA 탭 복원
         function restoreDataTab(data) {
@@ -3628,16 +3673,17 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 		        newbie: Array(35).fill({ barcode: '', remark: '' })
 		    };
 
-		    const flowDocRef = doc(db, "flowData", "current");
-		    setDoc(flowDocRef, emptyFlowData);
+		    const flowRef = ref(db, 'flowData/current');
+		    set(flowRef, emptyFlowData);
 
 		    // HOME 탭 리포트를 동기화하는 코드를 호출합니다.
 		    await syncFlowTcsToHomeReport();
 
 		    // 변경 로그 기록
 		    if (currentUser) {
-		        const logRef = doc(collection(db, "activityLogs"));
-		        setDoc(logRef, {
+		        const logKey = `${Date.now()}_reset`;
+		        const logRef = ref(db, `activityLogs/${logKey}`);
+		        set(logRef, {
 		            user: currentUser.displayName,
 		            timestamp: new Date().getTime(),
 		            changes: [{
@@ -3657,16 +3703,16 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 
         // 원바코드로 사원 정보 찾기
         function findEmployeeByBarcode(barcode) {
-            const dataDocRef = doc(db, "employeeData", "current");
+            const dataRef = ref(db, 'employeeData/current');
             
             return new Promise((resolve) => {
-                onSnapshot(dataDocRef, (docSnap) => {
-                    if (!docSnap.exists()) {
+                onValue(dataRef, (snapshot) => {
+                    if (!snapshot.exists()) {
                         resolve(null);
                         return;
                     }
 
-                    const data = docSnap.data();
+                    const data = snapshot.val();
                     
                     // 매니저 (M/G) - 원바코드, 닉네임, 이름
                     if (data.managers) {
@@ -3767,7 +3813,7 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
                     }
                     
                     resolve(null);
-                }, { once: true });
+                }, { onlyOnce: true });
             });
         }
 
@@ -3831,71 +3877,46 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             // }
         }
 		
-		let flowSaveTimeout = null;
-
-        function saveFlowDataToFirestore() {
-            clearTimeout(flowSaveTimeout);
-            flowSaveTimeout = setTimeout(() => {
-                const flowData = {
-                    tc: [],
-                    ps: [],
-                    leave: [],
-                    newbie: []
-                };
-
-                ['tc', 'ps', 'leave', 'newbie'].forEach(section => {
-                    const rows = document.querySelectorAll(`.flow-barcode-input[data-section="${section}"]`);
-                    
-                    rows.forEach((input, index) => {
-                        const barcode = input.value.trim();
-                        const roleInput = document.querySelector(`.flow-role-input[data-section="${section}"][data-index="${index}"]`);
-                        const remarkInput = document.querySelector(`.flow-remark-input[data-section="${section}"][data-index="${index}"]`);
-                        
-                        flowData[section].push({
-                            barcode: barcode,
-                            role: roleInput?.value.trim() || '',
-                            remark: remarkInput?.value.trim() || ''
-                        });
-                    });
-                });
-
-                const flowDocRef = doc(db, "flowData", "current");
-                setDoc(flowDocRef, flowData, { merge: true });
-            }, 300);  // 1초 지연
+		function saveFlowDataToFirestore() {
+            const data = collectFlowData();
+            scheduleSave('flow', data);
         }
 
         // FLOW 데이터 불러오기
         function loadFlowDataFromFirestore() {
-            const flowDocRef = doc(db, "flowData", "current");
-            
-            onSnapshot(flowDocRef, (docSnap) => {
-                if (!docSnap.exists()) return;
-                
-                const data = docSnap.data();
-                
-                ['tc', 'ps', 'leave', 'newbie'].forEach(section => {
-                    if (!data[section]) return;
-                    
-                    data[section].forEach((item, index) => {
-                        const barcodeInput = document.querySelector(`.flow-barcode-input[data-section="${section}"][data-index="${index}"]`);
-                        const roleInput = document.querySelector(`.flow-role-input[data-section="${section}"][data-index="${index}"]`);
-                        const remarkInput = document.querySelector(`.flow-remark-input[data-section="${section}"][data-index="${index}"]`);
-                        
-                        if (barcodeInput) {
-                            barcodeInput.value = item.barcode || '';
-                            // 원바코드가 있으면 자동으로 이름 채우기
-                            if (item.barcode) {
-                                handleFlowBarcodeInput({ target: barcodeInput });
-                            }
-                        }
-                        if (roleInput) roleInput.value = item.role || '';
-                        if (remarkInput) remarkInput.value = item.remark || '';
-                    });
-                });
-                
-                updateFlowCount();
-            });
-        }
+			const flowRef = ref(db, 'flowData/current');
+			
+			onValue(flowRef, (snapshot) => {
+				if (!snapshot.exists()) return;
+				
+				const data = snapshot.val();
+				
+				['tc', 'ps', 'leave', 'newbie'].forEach(section => {
+					if (!data[section]) return;
+					
+					data[section].forEach((item, index) => {
+						const barcodeInput = document.querySelector(`.flow-barcode-input[data-section="${section}"][data-index="${index}"]`);
+						const roleInput = document.querySelector(`.flow-role-input[data-section="${section}"][data-index="${index}"]`);
+						const remarkInput = document.querySelector(`.flow-remark-input[data-section="${section}"][data-index="${index}"]`);
+						
+						if (barcodeInput && barcodeInput.value !== (item.barcode || '')) {
+							barcodeInput.value = item.barcode || '';
+							if (item.barcode) {
+								handleFlowBarcodeInput({ target: barcodeInput });
+							}
+						}
+						if (roleInput && roleInput.value !== (item.role || '')) {
+							roleInput.value = item.role || '';
+						}
+						if (remarkInput && remarkInput.value !== (item.remark || '')) {
+							remarkInput.value = item.remark || '';
+						}
+					});
+				});
+				
+				updateFlowCount();
+			});
+		}
 		
 		function syncFlowToHome() {
             try {
@@ -3930,10 +3951,10 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
             }
         }
 		
-		// ✅ [새로 추가된 함수] FLOW 탭의 T/C 정보를 HOME 탭 리포트에 동기화
+		// FLOW 탭의 T/C 정보를 HOME 탭 리포트에 동기화
 		async function syncFlowTcsToHomeReport() {
 			try {
-				// 1. 현재 FLOW 탭에 입력된 T/C 닉네임 목록을 가져옵니다.
+				// 1. FLOW 탭에서 T/C 닉네임 수집
 				const tcNicknames = [];
 				const tcRows = document.querySelectorAll('.flow-barcode-input[data-section="tc"]');
 				
@@ -3942,40 +3963,49 @@ import { getFirestore, doc, setDoc, onSnapshot, collection, query, getDoc } from
 					if (barcode) {
 						const nickCell = document.querySelector(`.flow-nick[data-section="tc"][data-index="${index}"]`);
 						const nickname = nickCell ? nickCell.textContent.trim() : '-';
-						if (nickname && nickname !== '-') {
+						if (nickname && nickname !== '-' && nickname !== '⚠️ 미등록') {
 							tcNicknames.push(nickname);
 						}
 					}
 				});
 
-				// 2. Firestore에서 현재 HOME 탭의 리포트 데이터를 가져옵니다.
-				const homeReportDocRef = doc(db, "reports", "today");
-				const docSnap = await getDoc(homeReportDocRef);
-
-				if (!docSnap.exists()) {
-					console.error("HOME 탭의 리포트 데이터를 찾을 수 없습니다.");
-					return;
-				}
-
-				const reportData = docSnap.data();
-
-				// 3. 가져온 리포트 데이터에서 T/C 부분만 새로 만든 닉네임 목록으로 교체합니다.
-				// OM/AM (3칸)은 그대로 두고, 그 뒤부터 T/C 닉네임을 채웁니다.
-				const omAmData = reportData.report.managers.slice(0, 3);
-				const newTcData = Array(21).fill(''); // T/C 칸은 총 21개
-
-				tcNicknames.forEach((name, i) => {
-					if (i < newTcData.length) {
-						newTcData[i] = name;
+				// 2. HOME 탭 UI에 즉시 반영 (DOM 직접 업데이트)
+				const tcInputCount = 21; // T/C 21칸
+				
+				// T/C 칸만 업데이트
+				for (let i = 0; i < tcInputCount; i++) {
+					const input = document.getElementById(`tc-report-${i}`);
+					if (input) {
+						input.value = tcNicknames[i] || '';
 					}
-				});
+				}
+				
+				// Total 업데이트
+				updateReportTotal();
 
-				// OM/AM 데이터와 새로운 T/C 데이터를 합칩니다.
-				reportData.report.managers = [...omAmData, ...newTcData];
+				// 3. Realtime Database에도 저장 (다른 사용자를 위해)
+				const homeReportRef = ref(db, 'reports/today');
+				const snapshot = await get(homeReportRef);
 
-				// 4. 변경된 데이터를 다시 Firestore에 저장합니다.
-				// 이렇게 저장하면 HOME 탭을 보고 있는 모든 사용자에게 실시간으로 반영됩니다.
-				await setDoc(homeReportDocRef, reportData);
+				if (snapshot.exists()) {
+					const reportData = snapshot.val();
+					const omAmData = reportData.report.managers.slice(0, 3);
+					const newTcData = Array(21).fill('');
+
+					tcNicknames.forEach((name, i) => {
+						if (i < newTcData.length) {
+							newTcData[i] = name;
+						}
+					});
+
+					reportData.report.managers = [...omAmData, ...newTcData];
+					
+					// 캐시 업데이트 (리스너 무시 방지)
+					cachedData = reportData;
+					lastSavedData = JSON.parse(JSON.stringify(reportData));
+					
+					await set(homeReportRef, reportData);
+				}
 
 			} catch (error) {
 				console.error('HOME 탭 리포트 동기화 중 오류 발생:', error);
